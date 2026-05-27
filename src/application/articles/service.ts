@@ -37,6 +37,10 @@ export const createArticleService = ({
     return repository.listAllPublishedForSitemap();
   },
 
+  async listAllPublishedFull() {
+    return repository.listAllPublishedFull();
+  },
+
   async upsert(rawInput: unknown): Promise<Article> {
     const parsed = articleInputSchema.safeParse(rawInput);
     if (!parsed.success) {

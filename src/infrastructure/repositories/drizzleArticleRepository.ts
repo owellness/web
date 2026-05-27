@@ -201,6 +201,20 @@ export const drizzleArticleRepository: ArticleRepository = {
     }));
   },
 
+  async listAllPublishedFull(): Promise<Article[]> {
+    const rows = await db.query.articles.findMany({
+      where: eq(articles.status, "published"),
+      with: {
+        author: true,
+        primaryCategory: true,
+        medicalReviewer: true,
+        tags: { with: { tag: true } },
+      },
+      orderBy: [desc(articles.publishedAt)],
+    });
+    return rows.map((row) => mapArticle(row as ArticleWithRelations));
+  },
+
   async upsert(input: ArticleStorageInput): Promise<Article> {
     const primaryCategoryId = await resolveCategoryId(input.primaryCategorySlug);
     const tagIds = await ensureTagIds(input.tagSlugs);

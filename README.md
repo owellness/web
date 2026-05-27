@@ -87,10 +87,26 @@ pnpm dev
 ## SEO / AEO / GEO 체크리스트
 
 - [x] Metadata API + canonical + OpenGraph + Twitter card
-- [x] JSON-LD: Article/MedicalWebPage, BreadcrumbList, Organization, WebSite, FAQPage, Person
+- [x] JSON-LD: Article/MedicalWebPage, BreadcrumbList, Organization, WebSite, FAQPage, Person, Speakable
 - [x] Dynamic OG image (`/api/og?title=&category=&author=`)
-- [x] robots.ts + sitemap.ts (카테고리 + 동적 아티클)
-- [x] AEO: TL;DR 박스 + Speakable selector + FAQPage schema
-- [ ] llms.txt / llms-full.txt (Week 4)
-- [ ] Postgres FTS 검색 (Week 3)
-- [ ] Naver Search Advisor 등록 (배포 후)
+- [x] robots.ts (AI 크롤러 명시 allow) + sitemap.ts (카테고리·아티클·태그)
+- [x] AEO: TL;DR 박스 + Speakable selector + 질문형 H2 자동 FAQPage
+- [x] GEO: `/llms.txt` 인덱스 + `/llms-full.txt` 전체 본문 (llmstxt.org 스펙)
+- [x] Postgres FTS — es-hangul 자모·초성 매칭
+- [x] Vercel Analytics + Speed Insights + GA4 (Consent Mode v2, 쿠키리스)
+- [x] 의료 면책 컴포넌트 (`MedicalDisclaimer`)
+- [ ] Naver Search Advisor 등록 (배포 후 수동)
+
+## Naver Search Advisor 등록
+
+1. https://searchadvisor.naver.com/ 접속 → 사이트 등록
+2. 소유 확인 → **HTML 태그** 선택 → `content` 값 복사
+3. Vercel 환경변수에 `NAVER_SITE_VERIFICATION=값` 추가하고 재배포
+4. 등록 후 **사이트맵 제출** → `https://<domain>/sitemap.xml`
+5. RSS는 (아직) 없으므로 생략. 모바일 가이드라인 자동 통과
+
+## LLM 인용을 위한 GEO 엔드포인트
+
+- `https://<domain>/llms.txt` — 사이트 개요 + 카테고리 + 발행 아티클 인덱스
+- `https://<domain>/llms-full.txt` — 모든 발행 아티클 본문(plain text)
+- 캐시: 10분 ISR, AI 크롤러는 `robots.ts`에 명시적으로 허용

@@ -75,11 +75,20 @@ export type ArticleJsonLdInput = {
   publisher: { name: string; url: string; logoUrl: string };
   isMedical?: boolean;
   reviewedBy?: { name: string; url: string } | null;
+  speakableSelectors?: ReadonlyArray<string>;
 };
 
 export const buildArticleJsonLd = (
   input: ArticleJsonLdInput,
 ): WithContext<ArticleSchema | MedicalWebPage> => {
+  const speakable =
+    input.speakableSelectors && input.speakableSelectors.length > 0
+      ? {
+          "@type": "SpeakableSpecification" as const,
+          cssSelector: [...input.speakableSelectors],
+        }
+      : undefined;
+
   const base = {
     "@context": "https://schema.org" as const,
     headline: input.title,
@@ -102,6 +111,7 @@ export const buildArticleJsonLd = (
         url: input.publisher.logoUrl,
       },
     },
+    speakable,
     inLanguage: "ko-KR",
   };
 

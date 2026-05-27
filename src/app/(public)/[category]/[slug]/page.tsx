@@ -16,6 +16,7 @@ import {
   type CategorySlug,
 } from "@/config/site";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
+import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDisclaimer";
 
 import { articleService } from "@/composition";
 
@@ -91,6 +92,10 @@ export default async function ArticlePage({
   const articleUrl = `${SITE_URL}/${article.primaryCategorySlug}/${article.slug}`;
 
   const isMedical = article.medicalReviewer !== null;
+  const speakableSelectors: string[] = [];
+  if (article.tldr.length > 0) speakableSelectors.push(".speakable");
+  speakableSelectors.push("article h1");
+
   const articleSchema = buildArticleJsonLd({
     title: article.seoTitle ?? article.title,
     description: article.seoDescription ?? article.excerpt,
@@ -114,6 +119,7 @@ export default async function ArticlePage({
           url: `${SITE_URL}/authors/${article.medicalReviewer.slug}`,
         }
       : null,
+    speakableSelectors,
   });
 
   const breadcrumb = buildBreadcrumbJsonLd([
@@ -226,11 +232,7 @@ export default async function ArticlePage({
           </ul>
         ) : null}
 
-        {isMedical ? (
-          <p className="mt-12 rounded-md border border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
-            <strong className="text-foreground">의료 면책:</strong> 이 콘텐츠는 정보 제공을 목적으로 합니다. 진단·치료를 위한 의료 조언을 대체하지 않으며, 증상이 있다면 의료 전문가와 상담하세요.
-          </p>
-        ) : null}
+        {isMedical ? <MedicalDisclaimer /> : null}
       </article>
     </>
   );

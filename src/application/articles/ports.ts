@@ -22,6 +22,7 @@ export interface ArticleRepository {
   listAllPublishedForSitemap(): Promise<
     Pick<ArticleSummary, "slug" | "updatedAt" | "primaryCategorySlug">[]
   >;
+  listAllPublishedFull(): Promise<Article[]>;
   upsert(input: ArticleStorageInput): Promise<Article>;
   delete(id: string): Promise<void>;
 }
