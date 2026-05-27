@@ -1,40 +1,26 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useActionState } from "react";
 
-import type { subscribeAction } from "@/presentation/actions/newsletter";
+import type {
+  NewsletterFormResult,
+  subscribeAction,
+} from "@/presentation/actions/newsletter";
+
+type State = NewsletterFormResult | null;
 
 export function NewsletterForm({
   action,
 }: {
   action: typeof subscribeAction;
 }) {
-  const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState<
-    { type: "success" | "error"; text: string } | null
-  >(null);
+  const [state, formAction, pending] = useActionState<State, FormData>(
+    async (_prev, formData) => action(formData),
+    null,
+  );
 
   return (
-    <form
-      className="space-y-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        startTransition(async () => {
-          const res = await action(formData);
-          if (res.ok) {
-            const msg =
-              res.status === "already_confirmed"
-                ? "이미 구독 중입니다. 감사합니다!"
-                : "메일함을 확인하고 구독을 완료해주세요.";
-            setMessage({ type: "success", text: msg });
-            (e.target as HTMLFormElement).reset();
-          } else {
-            setMessage({ type: "error", text: res.error });
-          }
-        });
-      }}
-    >
+    <form action={formAction} className="space-y-3">
       <label className="block">
         <span className="text-sm font-medium text-foreground">이메일 주소</span>
         <input
@@ -60,16 +46,18 @@ export function NewsletterForm({
         </span>
       </label>
 
-      {message ? (
-        <p
-          className={`rounded-md px-3 py-2 text-sm ${
-            message.type === "success"
-              ? "bg-accent/15 text-accent"
-              : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300"
-          }`}
-        >
-          {message.text}
-        </p>
+      {state ? (
+        state.ok ? (
+          <p className="rounded-md bg-accent/15 px-3 py-2 text-sm text-accent">
+            {state.status === "already_confirmed"
+              ? "이미 구독 중입니다. 감사합니다!"
+              : "메일함을 확인하고 구독을 완료해주세요."}
+          </p>
+        ) : (
+          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+            {state.error}
+          </p>
+        )
       ) : null}
 
       <button
