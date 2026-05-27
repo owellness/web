@@ -65,7 +65,7 @@ export function NewsletterForm({
           className={`rounded-md px-3 py-2 text-sm ${
             message.type === "success"
               ? "bg-accent/15 text-accent"
-              : "bg-red-50 text-red-700"
+              : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300"
           }`}
         >
           {message.text}

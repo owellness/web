@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 
 import { SITE_CONFIG, SITE_NAME, SITE_URL } from "@/config/site";
+import { ThemeProvider } from "@/presentation/components/ThemeProvider";
 import "./globals.css";
 
 const pretendard = localFont({
@@ -57,8 +58,14 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ko" className={`${pretendard.variable} h-full`}>
-      <body className="min-h-full flex flex-col antialiased">{children}</body>
+    <html
+      lang="ko"
+      className={`${pretendard.variable} h-full`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full flex flex-col antialiased">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

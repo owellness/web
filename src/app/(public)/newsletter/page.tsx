@@ -55,7 +55,7 @@ export default async function NewsletterPage({
               ? "bg-accent/15 text-accent"
               : banner.type === "info"
                 ? "bg-muted text-muted-foreground"
-                : "bg-red-50 text-red-700"
+                : "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300"
           }`}
         >
           {banner.text}

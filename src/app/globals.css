@@ -30,8 +30,20 @@
   --card-foreground: #14110f;
 }
 
+.dark {
+  --background: #14110f;
+  --foreground: #f3f0ea;
+  --muted: #1f1b18;
+  --muted-foreground: #a39a8d;
+  --accent: #6db58c;
+  --accent-foreground: #0e0c0a;
+  --border: #2a2522;
+  --card: #1a1714;
+  --card-foreground: #f3f0ea;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --background: #14110f;
     --foreground: #f3f0ea;
     --muted: #1f1b18;

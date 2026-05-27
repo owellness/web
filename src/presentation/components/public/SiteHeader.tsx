@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { CATEGORIES, SITE_NAME } from "@/config/site";
+import { ThemeToggle } from "@/presentation/components/ThemeToggle";
 
 export function SiteHeader() {
   return (
@@ -26,16 +27,17 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-1 text-sm">
           <Link
             href="/search"
             className="rounded-md px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
           >
             검색
           </Link>
+          <ThemeToggle />
           <Link
             href="/newsletter"
-            className="rounded-md bg-accent px-3 py-2 text-accent-foreground transition hover:opacity-90"
+            className="ml-1 rounded-md bg-accent px-3 py-2 text-accent-foreground transition hover:opacity-90"
           >
             뉴스레터 구독
           </Link>

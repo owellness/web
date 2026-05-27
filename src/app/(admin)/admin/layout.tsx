@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SITE_NAME } from "@/config/site";
+import { ThemeToggle } from "@/presentation/components/ThemeToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default function AdminLayout({
           >
             {SITE_NAME} · 어드민
           </Link>
-          <nav className="flex gap-1 text-sm text-muted-foreground">
+          <nav className="flex items-center gap-1 text-sm text-muted-foreground">
             <Link
               href="/admin/articles"
               className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
@@ -36,6 +37,7 @@ export default function AdminLayout({
             >
               구독자
             </Link>
+            <ThemeToggle />
           </nav>
         </div>
       </header>
