@@ -19,6 +19,7 @@ export type ArticleSummary = {
   slug: string;
   title: string;
   excerpt: string;
+  status: ArticleStatus;
   publishedAt: Date | null;
   updatedAt: Date;
   primaryCategorySlug: CategorySlug;

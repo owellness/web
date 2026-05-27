@@ -1,12 +1,14 @@
 import type { MetadataRoute } from "next";
 
 import { CATEGORIES, SITE_URL } from "@/config/site";
+import { articleService } from "@/composition";
 
-// Week 1 baseline: static routes only. Article/tag/author URLs are added in Week 2
-// once the article repository is wired through `seoService.buildSitemap()`.
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  return [
+
+  const baseRoutes: MetadataRoute.Sitemap = [
     {
       url: `${SITE_URL}/`,
       lastModified: now,
@@ -32,4 +34,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     })),
   ];
+
+  // Article URLs are added from the DB. If the DB isn't reachable (e.g. local
+  // dev without env), fall back to the static routes so the sitemap still
+  // builds.
+  try {
+    const articles = await articleService.listForSitemap();
+    return [
+      ...baseRoutes,
+      ...articles.map((a) => ({
+        url: `${SITE_URL}/${a.primaryCategorySlug}/${a.slug}`,
+        lastModified: a.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      })),
+    ];
+  } catch (error) {
+    console.warn("[sitemap] Skipping article URLs:", error);
+    return baseRoutes;
+  }
 }

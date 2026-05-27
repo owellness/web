@@ -1,15 +1,23 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle, type NeonHttpDatabase } from "drizzle-orm/neon-http";
-import * as schema from "./schema";
+
+import * as relations from "./relations";
+import * as tables from "./schema";
+
+const schema = { ...tables, ...relations };
 
 export type Database = NeonHttpDatabase<typeof schema>;
 
-const BUILD_PLACEHOLDER = "postgres://placeholder:placeholder@localhost/placeholder";
+const BUILD_PLACEHOLDER =
+  "postgres://placeholder:placeholder@localhost/placeholder";
 
 const databaseUrl = process.env.DATABASE_URL ?? BUILD_PLACEHOLDER;
 
-if (!process.env.DATABASE_URL && process.env.NODE_ENV === "production" &&
-    process.env.NEXT_PHASE !== "phase-production-build") {
+if (
+  !process.env.DATABASE_URL &&
+  process.env.NODE_ENV === "production" &&
+  process.env.NEXT_PHASE !== "phase-production-build"
+) {
   console.warn(
     "[db] DATABASE_URL is not set; using a placeholder URL. Queries will fail at runtime.",
   );

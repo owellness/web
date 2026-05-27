@@ -1,0 +1,226 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import {
+  buildArticleJsonLd,
+  buildBreadcrumbJsonLd,
+} from "@/application/seo/jsonld";
+import {
+  CATEGORY_BY_SLUG,
+  SITE_CONFIG,
+  SITE_NAME,
+  SITE_URL,
+  type CategorySlug,
+} from "@/config/site";
+import { JsonLd } from "@/presentation/components/public/JsonLd";
+
+import { articleService } from "@/composition";
+
+export const revalidate = 300;
+export const dynamicParams = true;
+
+const formatDate = (date: Date | null) =>
+  date
+    ? new Intl.DateTimeFormat("ko-KR", { dateStyle: "long" }).format(date)
+    : "";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ category: string; slug: string }>;
+}): Promise<Metadata> {
+  const { category, slug } = await params;
+  if (!(category in CATEGORY_BY_SLUG)) return {};
+
+  try {
+    const article = await articleService.getBySlug(slug);
+    if (article.primaryCategorySlug !== category) return {};
+
+    const title = article.seoTitle ?? article.title;
+    const description = article.seoDescription ?? article.excerpt;
+    const url = `${SITE_URL}/${article.primaryCategorySlug}/${article.slug}`;
+    return {
+      title,
+      description,
+      alternates: { canonical: article.canonicalUrl ?? url },
+      openGraph: {
+        type: "article",
+        url,
+        title,
+        description,
+        siteName: SITE_NAME,
+        images: [article.ogImageUrl ?? SITE_CONFIG.defaultOgImage],
+        publishedTime: article.publishedAt?.toISOString(),
+        modifiedTime: article.updatedAt.toISOString(),
+        authors: [article.authorName],
+        tags: article.tags.map((t) => t.name),
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: [article.ogImageUrl ?? SITE_CONFIG.defaultOgImage],
+      },
+    };
+  } catch {
+    return {};
+  }
+}
+
+export default async function ArticlePage({
+  params,
+}: {
+  params: Promise<{ category: string; slug: string }>;
+}) {
+  const { category, slug } = await params;
+  if (!(category in CATEGORY_BY_SLUG)) notFound();
+
+  let article;
+  try {
+    article = await articleService.getBySlug(slug);
+  } catch {
+    notFound();
+  }
+  if (article.primaryCategorySlug !== category) notFound();
+  if (article.status !== "published") notFound();
+
+  const cat = CATEGORY_BY_SLUG[category as CategorySlug];
+  const articleUrl = `${SITE_URL}/${article.primaryCategorySlug}/${article.slug}`;
+
+  const isMedical = article.medicalReviewer !== null;
+  const articleSchema = buildArticleJsonLd({
+    title: article.seoTitle ?? article.title,
+    description: article.seoDescription ?? article.excerpt,
+    url: articleUrl,
+    imageUrl: article.ogImageUrl,
+    publishedAt: article.publishedAt,
+    updatedAt: article.updatedAt,
+    author: {
+      name: article.authorName,
+      url: `${SITE_URL}/authors/${article.authorSlug}`,
+    },
+    publisher: {
+      name: SITE_CONFIG.legalName,
+      url: SITE_URL,
+      logoUrl: `${SITE_URL}/logo.png`,
+    },
+    isMedical,
+    reviewedBy: article.medicalReviewer
+      ? {
+          name: article.medicalReviewer.name,
+          url: `${SITE_URL}/authors/${article.medicalReviewer.slug}`,
+        }
+      : null,
+  });
+
+  const breadcrumb = buildBreadcrumbJsonLd([
+    { name: SITE_NAME, url: SITE_URL },
+    { name: cat.name, url: `${SITE_URL}/${cat.slug}` },
+    { name: article.title, url: articleUrl },
+  ]);
+
+  return (
+    <>
+      <JsonLd schema={articleSchema} />
+      <JsonLd schema={breadcrumb} />
+
+      <article className="mx-auto max-w-3xl px-4 pb-24 pt-12 sm:px-6">
+        <nav
+          aria-label="breadcrumb"
+          className="mb-6 text-sm text-muted-foreground"
+        >
+          <Link href="/" className="hover:text-foreground">
+            홈
+          </Link>
+          <span aria-hidden> · </span>
+          <Link
+            href={`/${cat.slug}`}
+            className="hover:text-foreground"
+          >
+            {cat.shortName}
+          </Link>
+        </nav>
+
+        <header className="space-y-4">
+          <p className="text-sm font-medium uppercase tracking-widest text-accent">
+            {cat.name}
+          </p>
+          <h1 className="text-balance text-4xl font-semibold leading-tight tracking-tight text-foreground">
+            {article.title}
+          </h1>
+          <p className="text-lg leading-relaxed text-muted-foreground">
+            {article.excerpt}
+          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border pt-4 text-sm text-muted-foreground">
+            <span>
+              by{" "}
+              <Link
+                href={`/authors/${article.authorSlug}`}
+                className="font-medium text-foreground hover:text-accent"
+              >
+                {article.authorName}
+              </Link>
+            </span>
+            {article.publishedAt ? (
+              <time dateTime={article.publishedAt.toISOString()}>
+                {formatDate(article.publishedAt)}
+              </time>
+            ) : null}
+            <span>· {Math.max(1, Math.round(article.readingTimeSec / 60))}분 읽기</span>
+            {article.medicalReviewer ? (
+              <span>
+                · 의료 검토: <strong>{article.medicalReviewer.name}</strong>
+              </span>
+            ) : null}
+          </div>
+        </header>
+
+        {article.tldr.length > 0 ? (
+          <aside
+            aria-label="요약"
+            className="speakable my-10 rounded-2xl border border-accent/20 bg-accent/5 p-6"
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-accent">
+              TL;DR
+            </p>
+            <ul className="mt-3 space-y-2 text-base leading-relaxed text-foreground">
+              {article.tldr.map((line, idx) => (
+                <li key={idx} className="flex gap-2">
+                  <span className="mt-1 text-accent" aria-hidden>
+                    •
+                  </span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        ) : null}
+
+        <div
+          className="prose-article mt-10 leading-relaxed text-foreground"
+          dangerouslySetInnerHTML={{ __html: article.contentHtml }}
+        />
+
+        {article.tags.length > 0 ? (
+          <ul className="mt-12 flex flex-wrap gap-2 border-t border-border pt-6 text-sm text-muted-foreground">
+            {article.tags.map((tag) => (
+              <li
+                key={tag.slug}
+                className="rounded-full border border-border px-3 py-1"
+              >
+                #{tag.name}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {isMedical ? (
+          <p className="mt-12 rounded-md border border-border bg-muted/40 p-4 text-xs leading-relaxed text-muted-foreground">
+            <strong className="text-foreground">의료 면책:</strong> 이 콘텐츠는 정보 제공을 목적으로 합니다. 진단·치료를 위한 의료 조언을 대체하지 않으며, 증상이 있다면 의료 전문가와 상담하세요.
+          </p>
+        ) : null}
+      </article>
+    </>
+  );
+}
