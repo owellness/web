@@ -31,6 +31,40 @@ const ToolbarButton = ({
   </button>
 );
 
+const insertQAPattern = (editor: Editor) => {
+  editor
+    .chain()
+    .focus()
+    .insertContent([
+      {
+        type: "heading",
+        attrs: { level: 2 },
+        content: [{ type: "text", text: "질문을 입력하세요?" }],
+      },
+      {
+        type: "paragraph",
+        content: [{ type: "text", text: "답변을 한두 문장으로 작성하세요." }],
+      },
+    ])
+    .run();
+};
+
+const toggleLink = (editor: Editor) => {
+  const prev = editor.getAttributes("link").href as string | undefined;
+  const url = window.prompt("링크 URL", prev ?? "https://");
+  if (url === null) return;
+  if (url === "") {
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    return;
+  }
+  editor
+    .chain()
+    .focus()
+    .extendMarkRange("link")
+    .setLink({ href: url, target: "_blank", rel: "noopener noreferrer" })
+    .run();
+};
+
 function Toolbar({ editor }: { editor: Editor }) {
   return (
     <div className="flex flex-wrap items-center gap-1 border-b border-border bg-muted/40 px-3 py-2">
@@ -45,6 +79,9 @@ function Toolbar({ editor }: { editor: Editor }) {
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
       >
         H3
+      </ToolbarButton>
+      <ToolbarButton onClick={() => insertQAPattern(editor)}>
+        ? Q&amp;A
       </ToolbarButton>
       <span className="mx-1 h-5 w-px bg-border" aria-hidden />
       <ToolbarButton
@@ -64,6 +101,12 @@ function Toolbar({ editor }: { editor: Editor }) {
         onClick={() => editor.chain().focus().toggleStrike().run()}
       >
         취소선
+      </ToolbarButton>
+      <ToolbarButton
+        active={editor.isActive("link")}
+        onClick={() => toggleLink(editor)}
+      >
+        🔗 링크
       </ToolbarButton>
       <span className="mx-1 h-5 w-px bg-border" aria-hidden />
       <ToolbarButton

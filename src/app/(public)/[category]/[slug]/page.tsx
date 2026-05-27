@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { extractFaqFromHtml } from "@/application/seo/faqExtractor";
 import {
   buildArticleJsonLd,
   buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
 } from "@/application/seo/jsonld";
 import {
   CATEGORY_BY_SLUG,
@@ -120,10 +122,19 @@ export default async function ArticlePage({
     { name: article.title, url: articleUrl },
   ]);
 
+  const faqPairs = extractFaqFromHtml(article.contentHtml);
+  const faqSchema =
+    faqPairs.length >= 2
+      ? buildFaqJsonLd(
+          faqPairs.map((p) => ({ question: p.question, answerHtml: p.answer })),
+        )
+      : null;
+
   return (
     <>
       <JsonLd schema={articleSchema} />
       <JsonLd schema={breadcrumb} />
+      {faqSchema ? <JsonLd schema={faqSchema} /> : null}
 
       <article className="mx-auto max-w-3xl px-4 pb-24 pt-12 sm:px-6">
         <nav

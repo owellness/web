@@ -2,6 +2,8 @@ import { createArticleService } from "@/application/articles/service";
 import { createAuthorService } from "@/application/authors/service";
 import { createCategoryService } from "@/application/categories/service";
 import { createNewsletterService } from "@/application/newsletter/service";
+import { createSearchService } from "@/application/search/service";
+import { createTagService } from "@/application/tags/service";
 import { SITE_NAME, SITE_URL } from "@/config/site";
 
 import { hmacConfirmTokenSigner } from "@/infrastructure/auth/hmacTokens";
@@ -13,6 +15,8 @@ import { drizzleArticleRepository } from "@/infrastructure/repositories/drizzleA
 import { drizzleAuthorRepository } from "@/infrastructure/repositories/drizzleAuthorRepository";
 import { drizzleCategoryRepository } from "@/infrastructure/repositories/drizzleCategoryRepository";
 import { drizzleSubscriberRepository } from "@/infrastructure/repositories/drizzleSubscriberRepository";
+import { drizzleTagRepository } from "@/infrastructure/repositories/drizzleTagRepository";
+import { postgresFtsAdapter } from "@/infrastructure/search/postgresFtsAdapter";
 
 // Composition root. Presentation/App imports from here (and only from here)
 // to obtain the Application services it needs.
@@ -29,6 +33,10 @@ export const authorService = createAuthorService({
   repository: drizzleAuthorRepository,
   slugify,
 });
+
+export const tagService = createTagService(drizzleTagRepository);
+
+export const searchService = createSearchService(postgresFtsAdapter);
 
 export const newsletterService = createNewsletterService({
   repository: drizzleSubscriberRepository,

@@ -14,6 +14,7 @@ import { notFound } from "@/application/shared/errors";
 import type { Paginated, Pagination } from "@/application/shared/pagination";
 import { type CategorySlug } from "@/config/site";
 
+import { buildArticleSearchBlob } from "@/infrastructure/content/koreanTokens";
 import { db } from "@/infrastructure/db/client";
 import {
   articles,
@@ -151,6 +152,19 @@ export const drizzleArticleRepository: ArticleRepository = {
       if (!au) return { items: [], nextCursor: null };
       conditions.push(eq(articles.authorId, au.id));
     }
+    if (filter.tagSlug) {
+      const [t] = await db
+        .select({ id: tags.id })
+        .from(tags)
+        .where(eq(tags.slug, filter.tagSlug))
+        .limit(1);
+      if (!t) return { items: [], nextCursor: null };
+      const articleIdsWithTag = db
+        .select({ id: articleTags.articleId })
+        .from(articleTags)
+        .where(eq(articleTags.tagId, t.id));
+      conditions.push(inArray(articles.id, articleIdsWithTag));
+    }
 
     const offset = pagination.cursor ? Number(pagination.cursor) : 0;
     const rows = await db.query.articles.findMany({
@@ -210,7 +224,12 @@ export const drizzleArticleRepository: ArticleRepository = {
       publishedAt:
         input.status === "published" ? sql`coalesce(${articles.publishedAt}, now())` : null,
       updatedAt: sql`now()`,
-      searchText: [input.title, input.excerpt, input.tldr.join(" ")].join(" "),
+      searchText: buildArticleSearchBlob({
+        title: input.title,
+        excerpt: input.excerpt,
+        tldr: input.tldr,
+        contentText: input.contentHtml.replace(/<[^>]+>/g, " "),
+      }),
     };
 
     const [upserted] = await db
