@@ -1,0 +1,68 @@
+import Link from "next/link";
+
+import { CATEGORIES, SITE_NAME } from "@/config/site";
+
+export const revalidate = 300; // ISR every 5 min
+
+export default function HomePage() {
+  return (
+    <>
+      <section className="border-b border-border">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-20 sm:px-6 md:py-28">
+          <p className="text-sm font-medium uppercase tracking-widest text-accent">
+            Evidence-based wellness
+          </p>
+          <h1 className="max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
+            잘 자고, 잘 먹고, 잘 움직이는 법.
+            <br className="hidden sm:block" />
+            {SITE_NAME}이 매주 정리합니다.
+          </h1>
+          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
+            수면, 영양, 운동, 여성 건강. 흩어진 웰니스 정보를 근거와 함께
+            한곳에서 만나보세요. 곧 출시될 오 웰니스 앱의 진단·코칭 기능을
+            가장 먼저 받아볼 수 있도록 뉴스레터를 보내드립니다.
+          </p>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Link
+              href="/newsletter"
+              className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition hover:opacity-90"
+            >
+              뉴스레터 구독하기
+            </Link>
+            <Link
+              href="/sleep"
+              className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
+            >
+              인기 콘텐츠 보기
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+          카테고리
+        </h2>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {CATEGORIES.map((cat) => (
+            <Link
+              key={cat.slug}
+              href={`/${cat.slug}`}
+              className="group rounded-2xl border border-border bg-card p-6 transition hover:border-accent/40 hover:bg-muted/40"
+            >
+              <p className="text-xs font-medium uppercase tracking-widest text-accent">
+                {cat.shortName}
+              </p>
+              <h3 className="mt-3 text-lg font-semibold text-card-foreground">
+                {cat.name}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {cat.description}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}
