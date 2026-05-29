@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 
 import type { Article, TiptapDocument } from "@/application/articles/model";
-import type { CategoryDefinition } from "@/config/site";
 import { uploadImage } from "@/presentation/lib/uploadImage";
 import { TiptapEditor } from "./TiptapEditor";
 
 const EMPTY_DOC: TiptapDocument = { type: "doc", content: [] };
+
+export type ArticleFormCategory = { slug: string; name: string };
 
 export type ArticleFormProps = {
   initial?: Pick<
@@ -26,7 +27,7 @@ export type ArticleFormProps = {
     | "seoDescription"
     | "ogImageUrl"
   >;
-  categories: ReadonlyArray<CategoryDefinition>;
+  categories: ReadonlyArray<ArticleFormCategory>;
   defaultCategorySlug: string;
   action: (formData: FormData) => Promise<{ ok: boolean; error?: string }>;
 };

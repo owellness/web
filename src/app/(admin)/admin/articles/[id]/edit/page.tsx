@@ -7,7 +7,6 @@ import {
   deleteArticleAction,
   submitArticleAction,
 } from "@/presentation/actions/articles";
-import { CATEGORIES } from "@/config/site";
 import { articleService, categoryService } from "@/composition";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +17,7 @@ export default async function EditArticlePage({
   params: Promise<{ id: string }>;
 }) {
   await categoryService.ensureSeeded();
+  const cats = await categoryService.listAll();
   const { id } = await params;
 
   // Admin edits by article ID (UUID) — stable and free of slug-encoding
@@ -46,7 +46,7 @@ export default async function EditArticlePage({
       </header>
       <ArticleForm
         initial={article}
-        categories={CATEGORIES}
+        categories={cats}
         defaultCategorySlug={article.primaryCategorySlug}
         action={submitArticleAction}
       />

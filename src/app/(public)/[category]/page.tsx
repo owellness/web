@@ -2,22 +2,18 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { buildBreadcrumbJsonLd } from "@/application/seo/jsonld";
-import { CATEGORY_BY_SLUG, CATEGORIES, SITE_CONFIG, SITE_NAME, SITE_URL, type CategorySlug } from "@/config/site";
+import { articleService, categoryService } from "@/composition";
+import { SITE_CONFIG, SITE_NAME, SITE_URL } from "@/config/site";
 import { ArticleCard } from "@/presentation/components/public/ArticleCard";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
 
-import { articleService } from "@/composition";
-
 export const revalidate = 300;
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  return CATEGORIES.map((c) => ({ category: c.slug }));
+  const cats = await categoryService.listAll().catch(() => []);
+  return cats.map((c) => ({ category: c.slug }));
 }
-
-const resolveCategory = (slug: string) => {
-  if (!(slug in CATEGORY_BY_SLUG)) return null;
-  return CATEGORY_BY_SLUG[slug as CategorySlug];
-};
 
 export async function generateMetadata({
   params,
@@ -25,15 +21,14 @@ export async function generateMetadata({
   params: Promise<{ category: string }>;
 }): Promise<Metadata> {
   const { category } = await params;
-  const cat = resolveCategory(category);
+  const cat = await categoryService.findBySlug(category).catch(() => null);
   if (!cat) return {};
-  const title = `${cat.name} | ${SITE_NAME}`;
-  const description = cat.description;
+  const title = cat.seoTitle ?? `${cat.name} | ${SITE_NAME}`;
+  const description = cat.seoDescription ?? cat.description;
   const url = `${SITE_URL}/${cat.slug}`;
   return {
     title,
     description,
-    keywords: cat.keywords,
     alternates: { canonical: url },
     openGraph: {
       title,
@@ -52,7 +47,7 @@ export default async function CategoryPage({
   params: Promise<{ category: string }>;
 }) {
   const { category } = await params;
-  const cat = resolveCategory(category);
+  const cat = await categoryService.findBySlug(category).catch(() => null);
   if (!cat) notFound();
 
   // Resilient to DB unavailability during build (placeholder URL) — first real
@@ -74,25 +69,14 @@ export default async function CategoryPage({
       <JsonLd schema={breadcrumb} />
       <section className="border-b border-border">
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <p className="text-sm font-medium uppercase tracking-widest text-accent">
-            {cat.shortName}
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
+          <h1 className="text-4xl font-semibold tracking-tight text-foreground">
             {cat.name}
           </h1>
-          <p className="mt-4 max-w-3xl text-lg leading-relaxed text-muted-foreground">
-            {cat.description}
-          </p>
-          <ul className="mt-6 flex flex-wrap gap-2 text-xs text-muted-foreground">
-            {cat.keywords.map((kw) => (
-              <li
-                key={kw}
-                className="rounded-full border border-border px-3 py-1"
-              >
-                #{kw}
-              </li>
-            ))}
-          </ul>
+          {cat.description ? (
+            <p className="mt-4 max-w-3xl text-lg leading-relaxed text-muted-foreground">
+              {cat.description}
+            </p>
+          ) : null}
         </div>
       </section>
 

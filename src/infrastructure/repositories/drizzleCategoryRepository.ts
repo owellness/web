@@ -1,40 +1,48 @@
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import type { Category } from "@/application/categories/model";
 import type { CategoryRepository } from "@/application/categories/ports";
-import { CATEGORIES, type CategorySlug } from "@/config/site";
+import { decodeSlugForLookup } from "@/application/shared/slug";
 
 import { db } from "@/infrastructure/db/client";
 import { categories } from "@/infrastructure/db/schema";
 
-const VALID_SLUGS = new Set(CATEGORIES.map((c) => c.slug));
+type Row = typeof categories.$inferSelect;
 
-const mapCategory = (row: typeof categories.$inferSelect): Category | null => {
-  if (!VALID_SLUGS.has(row.slug as CategorySlug)) return null;
-  return {
-    id: row.id,
-    slug: row.slug as CategorySlug,
-    name: row.name,
-    description: row.description,
-    seoTitle: row.seoTitle,
-    seoDescription: row.seoDescription,
-  };
-};
+const mapCategory = (row: Row): Category => ({
+  id: row.id,
+  slug: row.slug,
+  name: row.name,
+  description: row.description,
+  seoTitle: row.seoTitle,
+  seoDescription: row.seoDescription,
+});
 
 export const drizzleCategoryRepository: CategoryRepository = {
   async listAll(): Promise<Category[]> {
-    const rows = await db.select().from(categories);
-    return rows.map(mapCategory).filter((c): c is Category => c !== null);
+    const rows = await db
+      .select()
+      .from(categories)
+      .orderBy(asc(categories.position), asc(categories.name));
+    return rows.map(mapCategory);
   },
 
-  async findBySlug(slug: string): Promise<Category | null> {
+  async findBySlug(slug) {
     const [row] = await db
       .select()
       .from(categories)
-      .where(eq(categories.slug, slug))
+      .where(eq(categories.slug, decodeSlugForLookup(slug)))
       .limit(1);
-    if (!row) return null;
-    return mapCategory(row);
+    return row ? mapCategory(row) : null;
+  },
+
+  async findById(id) {
+    const [row] = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.id, id))
+      .limit(1);
+    return row ? mapCategory(row) : null;
   },
 
   async upsertSeed(input) {
@@ -55,8 +63,40 @@ export const drizzleCategoryRepository: CategoryRepository = {
         },
       })
       .returning();
-    const mapped = mapCategory(row);
-    if (!mapped) throw new Error(`Invalid category slug: ${input.slug}`);
-    return mapped;
+    return mapCategory(row);
+  },
+
+  async create(input) {
+    const [row] = await db
+      .insert(categories)
+      .values({
+        slug: input.slug,
+        name: input.name,
+        description: input.description,
+        seoTitle: input.seoTitle ?? null,
+        seoDescription: input.seoDescription ?? null,
+      })
+      .returning();
+    return mapCategory(row);
+  },
+
+  async update(id, input) {
+    const [row] = await db
+      .update(categories)
+      .set({
+        slug: input.slug,
+        name: input.name,
+        description: input.description,
+        seoTitle: input.seoTitle ?? null,
+        seoDescription: input.seoDescription ?? null,
+      })
+      .where(eq(categories.id, id))
+      .returning();
+    if (!row) throw new Error(`Category(${id}) not found`);
+    return mapCategory(row);
+  },
+
+  async delete(id) {
+    await db.delete(categories).where(eq(categories.id, id));
   },
 };

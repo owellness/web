@@ -1,7 +1,9 @@
-export type CategorySlug = "sleep" | "nutrition" | "fitness" | "women";
+// Categories are now DB-driven at runtime. This string alias is kept so older
+// imports keep compiling; treat it as `string` everywhere.
+export type CategorySlug = string;
 
 export type CategoryDefinition = {
-  slug: CategorySlug;
+  slug: string;
   name: string;
   shortName: string;
   description: string;

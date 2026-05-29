@@ -9,17 +9,11 @@ import {
   buildBreadcrumbJsonLd,
   buildFaqJsonLd,
 } from "@/application/seo/jsonld";
-import {
-  CATEGORY_BY_SLUG,
-  SITE_CONFIG,
-  SITE_NAME,
-  SITE_URL,
-  type CategorySlug,
-} from "@/config/site";
+import { SITE_CONFIG, SITE_NAME, SITE_URL } from "@/config/site";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
 import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDisclaimer";
 
-import { articleService } from "@/composition";
+import { articleService, categoryService } from "@/composition";
 
 export const revalidate = 300;
 export const dynamicParams = true;
@@ -35,7 +29,10 @@ export async function generateMetadata({
   params: Promise<{ category: string; slug: string }>;
 }): Promise<Metadata> {
   const { category, slug } = await params;
-  if (!(category in CATEGORY_BY_SLUG)) return {};
+  const catExists = await categoryService
+    .findBySlug(category)
+    .catch(() => null);
+  if (!catExists) return {};
 
   try {
     const article = await articleService.getBySlug(slug);
@@ -78,7 +75,8 @@ export default async function ArticlePage({
   params: Promise<{ category: string; slug: string }>;
 }) {
   const { category, slug } = await params;
-  if (!(category in CATEGORY_BY_SLUG)) notFound();
+  const cat = await categoryService.findBySlug(category).catch(() => null);
+  if (!cat) notFound();
 
   let article;
   try {
@@ -94,7 +92,6 @@ export default async function ArticlePage({
   if (article.primaryCategorySlug !== category) notFound();
   if (article.status !== "published") notFound();
 
-  const cat = CATEGORY_BY_SLUG[category as CategorySlug];
   const articleUrl = `${SITE_URL}/${article.primaryCategorySlug}/${article.slug}`;
 
   const isMedical = article.medicalReviewer !== null;
@@ -161,7 +158,7 @@ export default async function ArticlePage({
             href={`/${cat.slug}`}
             className="hover:text-foreground"
           >
-            {cat.shortName}
+            {cat.name}
           </Link>
         </nav>
 

@@ -1,14 +1,22 @@
+import { redirect } from "next/navigation";
+
 import { ArticleForm } from "@/presentation/components/admin/ArticleForm";
 import { submitArticleAction } from "@/presentation/actions/articles";
-import { CATEGORIES } from "@/config/site";
 import { categoryService } from "@/composition";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewArticlePage() {
-  // Make sure the four categories exist so the form's primary category select
-  // resolves to a valid FK on save.
+  // Seed the four default categories on the very first admin visit so the
+  // primary-category select isn't empty before any manual category exists.
   await categoryService.ensureSeeded();
+  const cats = await categoryService.listAll();
+
+  if (cats.length === 0) {
+    // No DB categories at all (and seed couldn't run) — push the admin to
+    // create one before authoring an article.
+    redirect("/admin/categories/new?reason=need-first");
+  }
 
   return (
     <div className="space-y-6">
@@ -19,8 +27,8 @@ export default async function NewArticlePage() {
         </p>
       </header>
       <ArticleForm
-        categories={CATEGORIES}
-        defaultCategorySlug={CATEGORIES[0].slug}
+        categories={cats}
+        defaultCategorySlug={cats[0].slug}
         action={submitArticleAction}
       />
     </div>

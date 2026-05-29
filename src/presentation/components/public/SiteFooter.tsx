@@ -1,9 +1,11 @@
 import Link from "next/link";
 
-import { CATEGORIES, SITE_NAME } from "@/config/site";
+import { categoryService } from "@/composition";
+import { SITE_NAME } from "@/config/site";
 
-export function SiteFooter() {
+export async function SiteFooter() {
   const year = new Date().getFullYear();
+  const cats = await categoryService.listAll().catch(() => []);
   return (
     <footer className="mt-24 border-t border-border bg-muted/40">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-3">
@@ -17,7 +19,7 @@ export function SiteFooter() {
         <div>
           <p className="text-sm font-semibold text-foreground">카테고리</p>
           <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
-            {CATEGORIES.map((cat) => (
+            {cats.map((cat) => (
               <li key={cat.slug}>
                 <Link href={`/${cat.slug}`} className="hover:text-foreground">
                   {cat.name}

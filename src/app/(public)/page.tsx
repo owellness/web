@@ -1,10 +1,13 @@
 import Link from "next/link";
 
-import { CATEGORIES, SITE_NAME } from "@/config/site";
+import { categoryService } from "@/composition";
+import { SITE_NAME } from "@/config/site";
 
 export const revalidate = 300; // ISR every 5 min
 
-export default function HomePage() {
+export default async function HomePage() {
+  const cats = await categoryService.listAll().catch(() => []);
+  const ctaSlug = cats[0]?.slug;
   return (
     <>
       <section className="border-b border-border">
@@ -29,12 +32,14 @@ export default function HomePage() {
             >
               뉴스레터 구독하기
             </Link>
-            <Link
-              href="/sleep"
-              className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
-            >
-              인기 콘텐츠 보기
-            </Link>
+            {ctaSlug ? (
+              <Link
+                href={`/${ctaSlug}`}
+                className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
+              >
+                인기 콘텐츠 보기
+              </Link>
+            ) : null}
           </div>
         </div>
       </section>
@@ -44,16 +49,13 @@ export default function HomePage() {
           카테고리
         </h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {CATEGORIES.map((cat) => (
+          {cats.map((cat) => (
             <Link
               key={cat.slug}
               href={`/${cat.slug}`}
               className="group rounded-2xl border border-border bg-card p-6 transition hover:border-accent/40 hover:bg-muted/40"
             >
-              <p className="text-xs font-medium uppercase tracking-widest text-accent">
-                {cat.shortName}
-              </p>
-              <h3 className="mt-3 text-lg font-semibold text-card-foreground">
+              <h3 className="text-lg font-semibold text-card-foreground">
                 {cat.name}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
-import { articleService, tagService } from "@/composition";
-import { CATEGORIES, SITE_URL } from "@/config/site";
+import { articleService, categoryService, tagService } from "@/composition";
+import { SITE_URL } from "@/config/site";
 
 export const revalidate = 600;
 
@@ -13,6 +13,7 @@ const safe = async <T>(p: Promise<T>, fallback: T): Promise<T> =>
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  const cats = await safe(categoryService.listAll(), []);
 
   const baseRoutes: MetadataRoute.Sitemap = [
     {
@@ -33,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     },
-    ...CATEGORIES.map((cat) => ({
+    ...cats.map((cat) => ({
       url: `${SITE_URL}/${cat.slug}`,
       lastModified: now,
       changeFrequency: "weekly" as const,
