@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 import type {
   Article,
@@ -149,13 +149,19 @@ const loadArticleWithRelations = async (
 
 export const drizzleArticleRepository: ArticleRepository = {
   async findBySlug(slug) {
-    // Korean slugs arrive from URLs in either NFC or NFD form depending on the
-    // client OS/browser. We always store NFC, so normalize before matching.
-    const normalized = slug.normalize("NFC");
+    // Korean slugs can be stored/sent in either NFC or NFD form depending on
+    // the OS/browser. Match both forms so a lookup never misses on a Unicode
+    // normalization mismatch.
+    const nfc = slug.normalize("NFC");
+    const nfd = slug.normalize("NFD");
     const [row] = await db
       .select()
       .from(articles)
-      .where(eq(articles.slug, normalized))
+      .where(
+        nfc === nfd
+          ? eq(articles.slug, nfc)
+          : or(eq(articles.slug, nfc), eq(articles.slug, nfd)),
+      )
       .limit(1);
     if (!row) return null;
     return loadArticleWithRelations(row);

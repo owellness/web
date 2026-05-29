@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ApplicationError } from "@/application/shared/errors";
 import { extractFaqFromHtml } from "@/application/seo/faqExtractor";
 import {
   buildArticleJsonLd,
@@ -82,8 +83,13 @@ export default async function ArticlePage({
   let article;
   try {
     article = await articleService.getBySlug(slug);
-  } catch {
-    notFound();
+  } catch (e) {
+    // Genuine "not found" → 404. Real DB errors must surface (500 + logs)
+    // instead of being masked as a misleading "page not found".
+    if (e instanceof ApplicationError && e.code === "NOT_FOUND") {
+      notFound();
+    }
+    throw e;
   }
   if (article.primaryCategorySlug !== category) notFound();
   if (article.status !== "published") notFound();
