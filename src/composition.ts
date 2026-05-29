@@ -9,11 +9,16 @@ import { SITE_NAME, SITE_URL } from "@/config/site";
 
 import { hmacConfirmTokenSigner } from "@/infrastructure/auth/hmacTokens";
 import { nextRevalidation } from "@/infrastructure/cache/nextRevalidation";
+import { tiptapCampaignRenderer } from "@/infrastructure/content/campaignHtmlRenderer";
 import { slugify } from "@/infrastructure/content/slug";
 import { tiptapHtmlRenderer } from "@/infrastructure/content/tiptapHtmlRenderer";
-import { resendNewsletterMailer } from "@/infrastructure/email/newsletterMailer";
+import {
+  resendNewsletterBroadcaster,
+  resendNewsletterMailer,
+} from "@/infrastructure/email/newsletterMailer";
 import { drizzleArticleRepository } from "@/infrastructure/repositories/drizzleArticleRepository";
 import { drizzleAuthorRepository } from "@/infrastructure/repositories/drizzleAuthorRepository";
+import { drizzleCampaignRepository } from "@/infrastructure/repositories/drizzleCampaignRepository";
 import { drizzleCategoryRepository } from "@/infrastructure/repositories/drizzleCategoryRepository";
 import { drizzleSubscriberRepository } from "@/infrastructure/repositories/drizzleSubscriberRepository";
 import { drizzleTagRepository } from "@/infrastructure/repositories/drizzleTagRepository";
@@ -44,7 +49,10 @@ export const mediaService = createMediaService(blobMediaUploadAdapter);
 
 export const newsletterService = createNewsletterService({
   repository: drizzleSubscriberRepository,
+  campaigns: drizzleCampaignRepository,
   mailer: resendNewsletterMailer,
+  broadcaster: resendNewsletterBroadcaster,
+  htmlRenderer: tiptapCampaignRenderer,
   tokens: hmacConfirmTokenSigner,
   brandName: SITE_NAME,
   buildConfirmUrl: (token) =>

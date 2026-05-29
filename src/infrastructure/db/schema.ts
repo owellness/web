@@ -276,6 +276,33 @@ export const newsletterSubscribers = pgTable(
   (t) => [index("newsletter_subscribers_status_idx").on(t.status)],
 );
 
+export const campaignStatus = pgEnum("campaign_status", [
+  "draft",
+  "sending",
+  "sent",
+  "failed",
+]);
+
+export const newsletterCampaigns = pgTable(
+  "newsletter_campaigns",
+  {
+    id: uuid("id").primaryKey().default(idDefault()),
+    subject: varchar("subject", { length: 200 }).notNull(),
+    contentJson: jsonb("content_json").$type<unknown>().notNull(),
+    contentHtml: text("content_html").notNull(),
+    status: campaignStatus("status").notNull().default("draft"),
+    recipientCount: integer("recipient_count").notNull().default(0),
+    sentCount: integer("sent_count").notNull().default(0),
+    error: text("error"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    createdById: uuid("created_by_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
+  },
+  (t) => [index("newsletter_campaigns_created_at_idx").on(t.createdAt.desc())],
+);
+
 // ─────────────────────────────────────────────────────────────
 // Domain: media assets (Vercel Blob)
 // ─────────────────────────────────────────────────────────────

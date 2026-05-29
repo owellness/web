@@ -38,6 +38,15 @@ export const drizzleSubscriberRepository: SubscriberRepository = {
     return rows.map(map);
   },
 
+  async listConfirmedEmails() {
+    const rows = await db
+      .select({ email: newsletterSubscribers.email })
+      .from(newsletterSubscribers)
+      .where(eq(newsletterSubscribers.status, "confirmed"))
+      .orderBy(desc(newsletterSubscribers.createdAt));
+    return rows.map((r) => r.email);
+  },
+
   async countByStatus() {
     const rows = await db
       .select({
