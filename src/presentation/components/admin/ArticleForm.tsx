@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import type { Article, TiptapDocument } from "@/application/articles/model";
 import type { CategoryDefinition } from "@/config/site";
+import { uploadImage } from "@/presentation/lib/uploadImage";
 import { TiptapEditor } from "./TiptapEditor";
 
 const EMPTY_DOC: TiptapDocument = { type: "doc", content: [] };
@@ -46,6 +47,24 @@ export function ArticleForm({
   const [tagText, setTagText] = useState(
     (initial?.tags ?? []).map((t) => t.slug).join(", "),
   );
+  const [ogImageUrl, setOgImageUrl] = useState(initial?.ogImageUrl ?? "");
+  const [coverUploading, setCoverUploading] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverFile = (file: File | undefined) => {
+    if (!file) return;
+    setError(null);
+    setCoverUploading(true);
+    uploadImage(file)
+      .then(({ url }) => setOgImageUrl(url))
+      .catch((e) =>
+        setError(e instanceof Error ? e.message : "이미지 업로드 실패"),
+      )
+      .finally(() => {
+        setCoverUploading(false);
+        if (coverInputRef.current) coverInputRef.current.value = "";
+      });
+  };
 
   const onSubmit = (formData: FormData, status: "draft" | "published") => {
     formData.set("status", status);
@@ -200,12 +219,47 @@ export function ArticleForm({
           />
         </div>
 
-        <div className="space-y-1">
-          <span className="text-sm font-medium text-foreground">대표 이미지 URL</span>
+        <div className="space-y-2">
+          <span className="text-sm font-medium text-foreground">대표 이미지</span>
+          {ogImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={ogImageUrl}
+              alt="대표 이미지 미리보기"
+              className="aspect-[1200/630] w-full rounded-lg border border-border object-cover"
+            />
+          ) : null}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={coverUploading}
+              onClick={() => coverInputRef.current?.click()}
+              className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50"
+            >
+              {coverUploading ? "업로드 중…" : "이미지 업로드"}
+            </button>
+            {ogImageUrl ? (
+              <button
+                type="button"
+                onClick={() => setOgImageUrl("")}
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
+                제거
+              </button>
+            ) : null}
+          </div>
+          <input
+            ref={coverInputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => handleCoverFile(e.target.files?.[0])}
+          />
           <input
             name="ogImageUrl"
-            defaultValue={initial?.ogImageUrl ?? ""}
-            placeholder="https://..."
+            value={ogImageUrl}
+            onChange={(e) => setOgImageUrl(e.target.value)}
+            placeholder="또는 이미지 URL 직접 입력 (https://...)"
             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-accent"
           />
         </div>

@@ -40,7 +40,7 @@ export const sanitizeHtml = (dirty: string): string =>
     allowedTags,
     allowedAttributes: {
       a: ["href", "target", "rel", "title"],
-      img: ["src", "alt", "title", "width", "height"],
+      img: ["src", "alt", "title", "width", "height", "loading"],
       span: ["class"],
       code: ["class"],
       pre: ["class"],

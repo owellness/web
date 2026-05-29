@@ -1,6 +1,7 @@
 import { createArticleService } from "@/application/articles/service";
 import { createAuthorService } from "@/application/authors/service";
 import { createCategoryService } from "@/application/categories/service";
+import { createMediaService } from "@/application/media/service";
 import { createNewsletterService } from "@/application/newsletter/service";
 import { createSearchService } from "@/application/search/service";
 import { createTagService } from "@/application/tags/service";
@@ -17,6 +18,7 @@ import { drizzleCategoryRepository } from "@/infrastructure/repositories/drizzle
 import { drizzleSubscriberRepository } from "@/infrastructure/repositories/drizzleSubscriberRepository";
 import { drizzleTagRepository } from "@/infrastructure/repositories/drizzleTagRepository";
 import { postgresFtsAdapter } from "@/infrastructure/search/postgresFtsAdapter";
+import { blobMediaUploadAdapter } from "@/infrastructure/storage/blobClient";
 
 // Composition root. Presentation/App imports from here (and only from here)
 // to obtain the Application services it needs.
@@ -37,6 +39,8 @@ export const authorService = createAuthorService({
 export const tagService = createTagService(drizzleTagRepository);
 
 export const searchService = createSearchService(postgresFtsAdapter);
+
+export const mediaService = createMediaService(blobMediaUploadAdapter);
 
 export const newsletterService = createNewsletterService({
   repository: drizzleSubscriberRepository,
