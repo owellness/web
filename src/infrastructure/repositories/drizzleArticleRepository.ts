@@ -235,8 +235,9 @@ export const drizzleArticleRepository: ArticleRepository = {
       seoTitle: input.seoTitle ?? null,
       seoDescription: input.seoDescription ?? null,
       canonicalUrl: input.canonicalUrl ?? null,
-      publishedAt:
-        input.status === "published" ? sql`coalesce(${articles.publishedAt}, now())` : null,
+      // INSERT value: must NOT reference the target table's own column.
+      // now() is a function call, which is valid in a VALUES clause.
+      publishedAt: input.status === "published" ? sql`now()` : null,
       updatedAt: sql`now()`,
       searchText: buildArticleSearchBlob({
         title: input.title,
@@ -266,7 +267,12 @@ export const drizzleArticleRepository: ArticleRepository = {
           seoTitle: valuesBase.seoTitle,
           seoDescription: valuesBase.seoDescription,
           canonicalUrl: valuesBase.canonicalUrl,
-          publishedAt: valuesBase.publishedAt,
+          // UPDATE SET: referencing the existing row's column is valid here.
+          // Preserve the original publish time; only stamp it on first publish.
+          publishedAt:
+            input.status === "published"
+              ? sql`coalesce(${articles.publishedAt}, now())`
+              : null,
           updatedAt: valuesBase.updatedAt,
           searchText: valuesBase.searchText,
         },

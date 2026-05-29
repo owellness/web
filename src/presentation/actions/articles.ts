@@ -81,9 +81,13 @@ export async function submitArticleAction(
       return { ok: false, error: e.message };
     }
     console.error("[submitArticleAction]", e);
+    const detail = e instanceof Error ? e.message : String(e);
+    const hint = /relation .* does not exist/i.test(detail)
+      ? " (DB 테이블이 없습니다. deploy.sql을 실행했는지 확인하세요.)"
+      : "";
     return {
       ok: false,
-      error: "저장 중 오류가 발생했습니다.",
+      error: `저장 중 오류가 발생했습니다.${hint}`,
     };
   }
 }
