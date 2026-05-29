@@ -15,7 +15,6 @@
     "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
-    "@auth/drizzle-adapter": "^1.11.2",
     "@hookform/resolvers": "^5.4.0",
     "@neondatabase/serverless": "^1.1.0",
     "@react-email/components": "^1.0.12",

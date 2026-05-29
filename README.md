@@ -9,9 +9,9 @@
 - **Next.js 16** (App Router) + TypeScript + React 19
 - **Tailwind CSS v4** + shadcn/ui 스타일 디자인 토큰 + Pretendard 폰트
 - **Neon Postgres** + **Drizzle ORM**
-- **Auth.js v5** + Resend 매직 링크 (어드민 인증)
+- **Auth.js v5** + Credentials(아이디/비밀번호) 어드민 인증 (JWT 세션)
 - **Tiptap** WYSIWYG 에디터
-- **Resend** 이메일 (매직 링크 + 뉴스레터)
+- **Resend** 이메일 (뉴스레터)
 - **Vercel** 호스팅 + Vercel Blob (예정)
 
 ## 3-Tier 레이어드 아키텍처
@@ -40,7 +40,7 @@ pnpm install
 
 # 2) .env.local 만들기
 cp .env.example .env.local
-# Neon, Auth.js, Resend, ADMIN_EMAILS 값을 채워 넣으세요.
+# Neon, AUTH_SECRET, ADMIN_USERNAME/ADMIN_PASSWORD, Resend 값을 채워 넣으세요.
 
 # 3) DB 스키마 적용
 pnpm db:push
@@ -53,19 +53,19 @@ pnpm dev
 ```
 
 브라우저에서 [http://localhost:3000](http://localhost:3000)을 엽니다.
-어드민은 `/admin/login`에서 `ADMIN_EMAILS`에 등록한 이메일로 매직 링크를 받아
-로그인합니다.
+어드민은 `/admin/login`에서 `ADMIN_USERNAME` / `ADMIN_PASSWORD`로 로그인합니다.
 
 ## Vercel 배포
 
 1. Vercel에서 이 저장소를 import (Framework: Next.js 자동 감지)
 2. **Neon Postgres** 통합 추가 → `DATABASE_URL`, `DATABASE_URL_UNPOOLED` 자동 주입
-3. **Resend** 계정 생성 후 API key 발급 → 환경변수로 등록
+3. **Resend** 계정 생성 후 API key 발급 → 환경변수로 등록 (뉴스레터용)
 4. 환경변수 추가 (`.env.example` 참고):
    - `AUTH_SECRET` — `openssl rand -base64 32`로 생성
    - `AUTH_URL` — 배포 URL (예: `https://oh-wellness.vercel.app`)
-   - `RESEND_API_KEY`, `RESEND_FROM`
-   - `ADMIN_EMAILS` — 관리자 이메일(쉼표 구분)
+   - `ADMIN_USERNAME` / `ADMIN_PASSWORD` — 어드민 로그인 아이디·비밀번호
+   - (선택) `ADMIN_NAME` / `ADMIN_EMAIL` — 글 작성자 표시용
+   - `RESEND_API_KEY`, `RESEND_FROM` — 뉴스레터 발송
    - `NEXT_PUBLIC_SITE_URL` — 배포 URL
    - `NEWSLETTER_CONFIRM_SECRET` — `openssl rand -base64 32`로 생성
 5. 배포 후 `pnpm db:push` (로컬에서 production DATABASE_URL 사용) 또는
