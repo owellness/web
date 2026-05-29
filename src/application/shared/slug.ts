@@ -17,3 +17,24 @@ export const slugify = (input: string): string =>
 
 // Unicode-aware slug shape: letters/numbers separated by single hyphens.
 export const SLUG_PATTERN = /^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u;
+
+// Normalizes a slug coming from a URL param for DB lookup.
+//
+// Next.js usually decodes route params, but in some setups (middleware/proxy,
+// certain runtimes) a non-ASCII segment arrives still percent-encoded, e.g.
+// "%EC%B0%A8...". Stored slugs are always decoded + NFC, so we decode here
+// (handling accidental double-encoding) and normalize to NFC before matching.
+export const decodeSlugForLookup = (raw: string): string => {
+  let s = raw;
+  for (let i = 0; i < 3 && /%[0-9A-Fa-f]{2}/.test(s); i += 1) {
+    try {
+      const decoded = decodeURIComponent(s);
+      if (decoded === s) break;
+      s = decoded;
+    } catch {
+      break;
+    }
+  }
+  return s.normalize("NFC");
+};
+

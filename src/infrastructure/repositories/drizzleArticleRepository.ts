@@ -12,6 +12,7 @@ import type {
 } from "@/application/articles/ports";
 import { notFound } from "@/application/shared/errors";
 import type { Paginated, Pagination } from "@/application/shared/pagination";
+import { decodeSlugForLookup } from "@/application/shared/slug";
 import { type CategorySlug } from "@/config/site";
 
 import { buildArticleSearchBlob } from "@/infrastructure/content/koreanTokens";
@@ -149,11 +150,11 @@ const loadArticleWithRelations = async (
 
 export const drizzleArticleRepository: ArticleRepository = {
   async findBySlug(slug) {
-    // Korean slugs can be stored/sent in either NFC or NFD form depending on
-    // the OS/browser. Match both forms so a lookup never misses on a Unicode
-    // normalization mismatch.
-    const nfc = slug.normalize("NFC");
-    const nfd = slug.normalize("NFD");
+    // URL params may arrive percent-encoded and/or in NFD form. Decode +
+    // NFC-normalize, then match both NFC and NFD against the stored value.
+    const decoded = decodeSlugForLookup(slug);
+    const nfc = decoded.normalize("NFC");
+    const nfd = decoded.normalize("NFD");
     const [row] = await db
       .select()
       .from(articles)

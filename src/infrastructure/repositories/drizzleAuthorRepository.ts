@@ -2,6 +2,7 @@ import { eq, sql } from "drizzle-orm";
 
 import type { Author } from "@/application/authors/model";
 import type { AuthorRepository } from "@/application/authors/ports";
+import { decodeSlugForLookup } from "@/application/shared/slug";
 
 import { db } from "@/infrastructure/db/client";
 import { authors } from "@/infrastructure/db/schema";
@@ -54,7 +55,7 @@ export const drizzleAuthorRepository: AuthorRepository = {
     const [row] = await db
       .select()
       .from(authors)
-      .where(eq(authors.slug, slug.normalize("NFC")))
+      .where(eq(authors.slug, decodeSlugForLookup(slug)))
       .limit(1);
     return row ? mapAuthor(row) : null;
   },

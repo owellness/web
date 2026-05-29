@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 
 import type { Tag } from "@/application/tags/model";
 import type { TagRepository } from "@/application/tags/ports";
+import { decodeSlugForLookup } from "@/application/shared/slug";
 
 import { db } from "@/infrastructure/db/client";
 import { tags } from "@/infrastructure/db/schema";
@@ -14,7 +15,7 @@ export const drizzleTagRepository: TagRepository = {
     const [row] = await db
       .select()
       .from(tags)
-      .where(eq(tags.slug, slug.normalize("NFC")))
+      .where(eq(tags.slug, decodeSlugForLookup(slug)))
       .limit(1);
     return row ? map(row) : null;
   },
