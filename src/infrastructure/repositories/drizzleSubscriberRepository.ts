@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { count, desc, eq, sql } from "drizzle-orm";
 
 import type { Subscriber } from "@/application/newsletter/model";
 import type { SubscriberRepository } from "@/application/newsletter/ports";
@@ -27,6 +27,32 @@ export const drizzleSubscriberRepository: SubscriberRepository = {
       .where(eq(newsletterSubscribers.email, email.toLowerCase()))
       .limit(1);
     return row ? map(row) : null;
+  },
+
+  async listRecent(limit) {
+    const rows = await db
+      .select()
+      .from(newsletterSubscribers)
+      .orderBy(desc(newsletterSubscribers.createdAt))
+      .limit(limit);
+    return rows.map(map);
+  },
+
+  async countByStatus() {
+    const rows = await db
+      .select({
+        status: newsletterSubscribers.status,
+        n: count(),
+      })
+      .from(newsletterSubscribers)
+      .groupBy(newsletterSubscribers.status);
+    const out: Record<Subscriber["status"], number> = {
+      pending: 0,
+      confirmed: 0,
+      unsubscribed: 0,
+    };
+    for (const r of rows) out[r.status] = Number(r.n);
+    return out;
   },
 
   async upsertPending(input) {

@@ -80,6 +80,14 @@ export const createNewsletterService = (deps: NewsletterServiceDeps) => ({
     if (!updated) throw notFound("Subscriber");
     return updated;
   },
+
+  async listRecent(limit = 200): Promise<Subscriber[]> {
+    return deps.repository.listRecent(limit);
+  },
+
+  async statusCounts(): Promise<Record<Subscriber["status"], number>> {
+    return deps.repository.countByStatus();
+  },
 });
 
 export type NewsletterService = ReturnType<typeof createNewsletterService>;

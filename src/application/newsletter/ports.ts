@@ -2,6 +2,8 @@ import type { Subscriber } from "./model";
 
 export interface SubscriberRepository {
   findByEmail(email: string): Promise<Subscriber | null>;
+  listRecent(limit: number): Promise<Subscriber[]>;
+  countByStatus(): Promise<Record<Subscriber["status"], number>>;
   upsertPending(input: {
     email: string;
     source: string | null;
