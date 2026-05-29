@@ -127,11 +127,14 @@ export function ArticleForm({
           <span className="text-sm font-medium text-foreground">슬러그 (URL)</span>
           <input
             name="slug"
-            required
             defaultValue={initial?.slug ?? ""}
-            placeholder="예: 수면-호르몬-가이드"
+            placeholder="예: 수면-호르몬-가이드 (비워두면 제목에서 자동 생성)"
             className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-card-foreground outline-none focus:border-accent"
           />
+          <span className="mt-1 block text-xs text-muted-foreground">
+            한글·영문·숫자와 하이픈(-)을 쓸 수 있어요. 공백은 자동으로
+            하이픈으로 바뀝니다.
+          </span>
         </label>
 
         <label className="block">

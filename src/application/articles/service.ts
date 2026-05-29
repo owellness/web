@@ -1,6 +1,7 @@
 import { CATEGORY_BY_SLUG, type CategorySlug } from "@/config/site";
 import { notFound, validationFailed } from "@/application/shared/errors";
 import type { Paginated, Pagination } from "@/application/shared/pagination";
+import { slugify } from "@/application/shared/slug";
 import { articleInputSchema, type Article, type ArticleInput, type ArticleSummary } from "./model";
 import type {
   ArticleListFilter,
@@ -42,7 +43,19 @@ export const createArticleService = ({
   },
 
   async upsert(rawInput: unknown): Promise<Article> {
-    const parsed = articleInputSchema.safeParse(rawInput);
+    // Normalize the slug before validation: run whatever the admin typed
+    // through slugify, and fall back to the title when it's left blank. This
+    // lets editors type Korean (or nothing) without hitting a format error.
+    const candidate = (rawInput ?? {}) as Record<string, unknown>;
+    const typedSlug = typeof candidate.slug === "string" ? candidate.slug : "";
+    const typedTitle =
+      typeof candidate.title === "string" ? candidate.title : "";
+    const normalizedSlug = slugify(typedSlug) || slugify(typedTitle);
+
+    const parsed = articleInputSchema.safeParse({
+      ...candidate,
+      slug: normalizedSlug,
+    });
     if (!parsed.success) {
       throw validationFailed(parsed.error.message);
     }

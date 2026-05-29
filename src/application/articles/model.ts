@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { CategorySlug } from "@/config/site";
+import { SLUG_PATTERN } from "@/application/shared/slug";
 
 export const ARTICLE_STATUS = ["draft", "published", "archived"] as const;
 export type ArticleStatus = (typeof ARTICLE_STATUS)[number];
@@ -46,7 +47,10 @@ export const articleInputSchema = z.object({
     .string()
     .min(1)
     .max(160)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "slug must be kebab-case ascii"),
+    .regex(
+      SLUG_PATTERN,
+      "슬러그는 한글·영문·숫자와 하이픈(-)만 사용할 수 있습니다.",
+    ),
   title: z.string().min(1).max(200),
   excerpt: z.string().min(1).max(300),
   tldr: z.array(z.string().min(1).max(160)).max(6).default([]),
