@@ -38,6 +38,9 @@ const authPolicy = createAuthPolicy({ adminEmails });
 const MAGIC_LINK_TTL_MINUTES = 5;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Trust the deployment host (Vercel sets the URL). Without this, NextAuth
+  // can reject the request host and 500 on /api/auth/*.
+  trustHost: true,
   adapter: DrizzleAdapter(db, {
     usersTable: authSchema.usersTable,
     accountsTable: authSchema.accountsTable,
