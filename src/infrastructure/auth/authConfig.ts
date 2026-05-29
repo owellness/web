@@ -48,7 +48,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Resend({
       apiKey: process.env.RESEND_API_KEY,
-      from: process.env.RESEND_FROM,
+      // Falls back to Resend's shared sender so magic links work before a
+      // custom domain is verified. Our sendVerificationRequest below uses
+      // RESEND_FROM from resendClient, so this is mainly to satisfy the
+      // provider's own config validation.
+      from: process.env.RESEND_FROM ?? "오 웰니스 <onboarding@resend.dev>",
       maxAge: MAGIC_LINK_TTL_MINUTES * 60,
       sendVerificationRequest: async ({ identifier, url }) => {
         await resendMagicLinkSender.send({
