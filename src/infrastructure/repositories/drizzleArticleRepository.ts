@@ -109,58 +109,66 @@ const resolveCategoryId = async (slug: string): Promise<string> => {
   return row.id;
 };
 
+// Loads an article's relations with explicit queries rather than a single
+// nested relational query. The relational form joined `authors` twice
+// (author + medicalReviewer) plus the tags m2m, which proved fragile over
+// neon-http; splitting it keeps detail lookups reliable.
+const loadArticleWithRelations = async (
+  row: ArticleRow,
+): Promise<Article | null> => {
+  const [author] = await db
+    .select()
+    .from(authors)
+    .where(eq(authors.id, row.authorId))
+    .limit(1);
+  const [primaryCategory] = await db
+    .select()
+    .from(categories)
+    .where(eq(categories.id, row.primaryCategoryId))
+    .limit(1);
+  if (!author || !primaryCategory) return null;
+
+  let medicalReviewer: AuthorRow | null = null;
+  if (row.medicalReviewerId) {
+    const [mr] = await db
+      .select()
+      .from(authors)
+      .where(eq(authors.id, row.medicalReviewerId))
+      .limit(1);
+    medicalReviewer = mr ?? null;
+  }
+
+  const tagRows = await db
+    .select({ tag: tags })
+    .from(articleTags)
+    .innerJoin(tags, eq(articleTags.tagId, tags.id))
+    .where(eq(articleTags.articleId, row.id));
+
+  return mapArticle({ ...row, author, primaryCategory, medicalReviewer, tags: tagRows });
+};
+
 export const drizzleArticleRepository: ArticleRepository = {
   async findBySlug(slug) {
     // Korean slugs arrive from URLs in either NFC or NFD form depending on the
     // client OS/browser. We always store NFC, so normalize before matching.
     const normalized = slug.normalize("NFC");
-
-    // Use explicit queries rather than a single nested relational query.
-    // The relational form joined `authors` twice (author + medicalReviewer)
-    // plus the tags m2m, which is fragile over neon-http; splitting it keeps
-    // detail lookups reliable.
     const [row] = await db
       .select()
       .from(articles)
       .where(eq(articles.slug, normalized))
       .limit(1);
     if (!row) return null;
+    return loadArticleWithRelations(row);
+  },
 
-    const [author] = await db
+  async findById(id) {
+    const [row] = await db
       .select()
-      .from(authors)
-      .where(eq(authors.id, row.authorId))
+      .from(articles)
+      .where(eq(articles.id, id))
       .limit(1);
-    const [primaryCategory] = await db
-      .select()
-      .from(categories)
-      .where(eq(categories.id, row.primaryCategoryId))
-      .limit(1);
-    if (!author || !primaryCategory) return null;
-
-    let medicalReviewer: AuthorRow | null = null;
-    if (row.medicalReviewerId) {
-      const [mr] = await db
-        .select()
-        .from(authors)
-        .where(eq(authors.id, row.medicalReviewerId))
-        .limit(1);
-      medicalReviewer = mr ?? null;
-    }
-
-    const tagRows = await db
-      .select({ tag: tags })
-      .from(articleTags)
-      .innerJoin(tags, eq(articleTags.tagId, tags.id))
-      .where(eq(articleTags.articleId, row.id));
-
-    return mapArticle({
-      ...row,
-      author,
-      primaryCategory,
-      medicalReviewer,
-      tags: tagRows,
-    });
+    if (!row) return null;
+    return loadArticleWithRelations(row);
   },
 
   async listSummaries(
@@ -241,17 +249,15 @@ export const drizzleArticleRepository: ArticleRepository = {
   },
 
   async listAllPublishedFull(): Promise<Article[]> {
-    const rows = await db.query.articles.findMany({
-      where: eq(articles.status, "published"),
-      with: {
-        author: true,
-        primaryCategory: true,
-        medicalReviewer: true,
-        tags: { with: { tag: true } },
-      },
-      orderBy: [desc(articles.publishedAt)],
-    });
-    return rows.map((row) => mapArticle(row as ArticleWithRelations));
+    const rows = await db
+      .select()
+      .from(articles)
+      .where(eq(articles.status, "published"))
+      .orderBy(desc(articles.publishedAt));
+    const loaded = await Promise.all(
+      rows.map((row) => loadArticleWithRelations(row)),
+    );
+    return loaded.filter((a): a is Article => a !== null);
   },
 
   async upsert(input: ArticleStorageInput): Promise<Article> {

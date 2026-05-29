@@ -11,16 +11,17 @@ export const dynamic = "force-dynamic";
 export default async function EditArticlePage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ id: string }>;
 }) {
   await categoryService.ensureSeeded();
-  const { slug } = await params;
+  const { id } = await params;
 
-  // Only a genuine "not found" should 404. Real DB errors must surface (500 +
-  // logs) rather than be masked as a misleading "page not found".
+  // Admin edits by article ID (UUID) — stable and free of slug-encoding
+  // pitfalls. Only a genuine "not found" should 404; real DB errors surface
+  // as 500 + logs rather than a misleading "page not found".
   let article;
   try {
-    article = await articleService.getBySlug(slug);
+    article = await articleService.getById(id);
   } catch (e) {
     if (e instanceof ApplicationError && e.code === "NOT_FOUND") {
       notFound();

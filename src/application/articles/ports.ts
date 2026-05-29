@@ -15,6 +15,7 @@ export type ArticleStorageInput = ArticleInput & {
 
 export interface ArticleRepository {
   findBySlug(slug: string): Promise<Article | null>;
+  findById(id: string): Promise<Article | null>;
   listSummaries(
     filter: ArticleListFilter,
     pagination: Pagination,

@@ -54,7 +54,7 @@ export default async function AdminArticlesPage() {
                 <tr key={a.id} className="transition hover:bg-muted/30">
                   <td className="px-4 py-3">
                     <Link
-                      href={`/admin/articles/${a.slug}/edit`}
+                      href={`/admin/articles/${a.id}/edit`}
                       className="font-medium text-card-foreground hover:text-accent"
                     >
                       {a.title}

@@ -27,6 +27,12 @@ export const createArticleService = ({
     return article;
   },
 
+  async getById(id: string): Promise<Article> {
+    const article = await repository.findById(id);
+    if (!article) throw notFound("Article");
+    return article;
+  },
+
   async list(
     filter: ArticleListFilter,
     pagination: Pagination,
