@@ -11,8 +11,13 @@ type State = NewsletterFormResult | null;
 
 export function NewsletterForm({
   action,
+  source = "newsletter-page",
+  submitLabel = "구독 신청",
 }: {
   action: typeof subscribeAction;
+  /** Tracks where the signup came from (newsletter-page, article-footer, …). */
+  source?: string;
+  submitLabel?: string;
 }) {
   const [state, formAction, pending] = useActionState<State, FormData>(
     async (_prev, formData) => action(formData),
@@ -21,6 +26,7 @@ export function NewsletterForm({
 
   return (
     <form action={formAction} className="space-y-3">
+      <input type="hidden" name="source" value={source} />
       <label className="block">
         <span className="text-sm font-medium text-foreground">이메일 주소</span>
         <input
@@ -65,7 +71,7 @@ export function NewsletterForm({
         disabled={pending}
         className="w-full rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-50"
       >
-        {pending ? "처리 중…" : "구독 신청"}
+        {pending ? "처리 중…" : submitLabel}
       </button>
     </form>
   );
