@@ -96,6 +96,23 @@ export const createArticleService = ({
 
     return article;
   },
+
+  async delete(id: string): Promise<void> {
+    // Load the article first so we know which URLs to revalidate after delete.
+    const article = await repository.findById(id);
+    if (!article) throw notFound("Article");
+    await repository.delete(id);
+    await Promise.all([
+      revalidation.revalidateArticle(
+        article.slug,
+        article.primaryCategorySlug as CategorySlug,
+      ),
+      revalidation.revalidateCategory(
+        article.primaryCategorySlug as CategorySlug,
+      ),
+      revalidation.revalidateHome(),
+    ]);
+  },
 });
 
 export type ArticleService = ReturnType<typeof createArticleService>;

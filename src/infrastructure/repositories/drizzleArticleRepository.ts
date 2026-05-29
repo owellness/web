@@ -271,7 +271,7 @@ export const drizzleArticleRepository: ArticleRepository = {
     const primaryCategoryId = await resolveCategoryId(input.primaryCategorySlug);
     const tagIds = await ensureTagIds(input.tagSlugs);
 
-    const valuesBase = {
+    const writable = {
       slug: input.slug,
       title: input.title,
       excerpt: input.excerpt,
@@ -287,9 +287,6 @@ export const drizzleArticleRepository: ArticleRepository = {
       seoTitle: input.seoTitle ?? null,
       seoDescription: input.seoDescription ?? null,
       canonicalUrl: input.canonicalUrl ?? null,
-      // INSERT value: must NOT reference the target table's own column.
-      // now() is a function call, which is valid in a VALUES clause.
-      publishedAt: input.status === "published" ? sql`now()` : null,
       updatedAt: sql`now()`,
       searchText: buildArticleSearchBlob({
         title: input.title,
@@ -299,58 +296,67 @@ export const drizzleArticleRepository: ArticleRepository = {
       }),
     };
 
-    const [upserted] = await db
-      .insert(articles)
-      .values(valuesBase)
-      .onConflictDoUpdate({
-        target: articles.slug,
-        set: {
-          title: valuesBase.title,
-          excerpt: valuesBase.excerpt,
-          tldr: valuesBase.tldr,
-          contentJson: valuesBase.contentJson,
-          contentHtml: valuesBase.contentHtml,
-          readingTimeSec: valuesBase.readingTimeSec,
-          status: valuesBase.status,
-          authorId: valuesBase.authorId,
-          primaryCategoryId: valuesBase.primaryCategoryId,
-          medicalReviewerId: valuesBase.medicalReviewerId,
-          ogImageUrl: valuesBase.ogImageUrl,
-          seoTitle: valuesBase.seoTitle,
-          seoDescription: valuesBase.seoDescription,
-          canonicalUrl: valuesBase.canonicalUrl,
-          // UPDATE SET: referencing the existing row's column is valid here.
-          // Preserve the original publish time; only stamp it on first publish.
+    let savedId: string;
+
+    if (input.id) {
+      // Editing an existing article: UPDATE by id so a slug change rewrites
+      // the same row instead of inserting a new one. Preserve the original
+      // publishedAt on republish.
+      const [updated] = await db
+        .update(articles)
+        .set({
+          ...writable,
           publishedAt:
             input.status === "published"
               ? sql`coalesce(${articles.publishedAt}, now())`
               : null,
-          updatedAt: valuesBase.updatedAt,
-          searchText: valuesBase.searchText,
-        },
-      })
-      .returning({ id: articles.id });
+        })
+        .where(eq(articles.id, input.id))
+        .returning({ id: articles.id });
+      if (!updated) throw notFound(`Article(${input.id})`);
+      savedId = updated.id;
+    } else {
+      // Creating a new article. Keep slug-conflict resolution so re-submitting
+      // a draft with the same slug doesn't error out.
+      const [inserted] = await db
+        .insert(articles)
+        .values({
+          ...writable,
+          // INSERT VALUES cannot reference the target table's own column.
+          publishedAt: input.status === "published" ? sql`now()` : null,
+        })
+        .onConflictDoUpdate({
+          target: articles.slug,
+          set: {
+            ...writable,
+            publishedAt:
+              input.status === "published"
+                ? sql`coalesce(${articles.publishedAt}, now())`
+                : null,
+          },
+        })
+        .returning({ id: articles.id });
+      savedId = inserted.id;
+    }
 
     // Sync tags. Neon HTTP doesn't support transactions, so we do best-effort
     // sequential ops. Tag join writes are idempotent given the m2m PK.
-    await db.delete(articleTags).where(eq(articleTags.articleId, upserted.id));
+    await db.delete(articleTags).where(eq(articleTags.articleId, savedId));
     if (tagIds.length > 0) {
       await db
         .insert(articleTags)
-        .values(tagIds.map((tagId) => ({ articleId: upserted.id, tagId })));
+        .values(tagIds.map((tagId) => ({ articleId: savedId, tagId })));
     }
 
-    const saved = await db.query.articles.findFirst({
-      where: eq(articles.id, upserted.id),
-      with: {
-        author: true,
-        primaryCategory: true,
-        medicalReviewer: true,
-        tags: { with: { tag: true } },
-      },
-    });
-    if (!saved) throw notFound(`Article(${upserted.id})`);
-    return mapArticle(saved as ArticleWithRelations);
+    const [savedRow] = await db
+      .select()
+      .from(articles)
+      .where(eq(articles.id, savedId))
+      .limit(1);
+    if (!savedRow) throw notFound(`Article(${savedId})`);
+    const article = await loadArticleWithRelations(savedRow);
+    if (!article) throw notFound(`Article(${savedId})`);
+    return article;
   },
 
   async delete(id) {

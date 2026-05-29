@@ -43,6 +43,9 @@ export type Article = ArticleSummary & {
 };
 
 export const articleInputSchema = z.object({
+  // Present when editing an existing article — drives id-based UPDATE so a
+  // slug change doesn't accidentally insert a new row.
+  id: z.string().uuid().optional(),
   slug: z
     .string()
     .min(1)

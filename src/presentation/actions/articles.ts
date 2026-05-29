@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import type { ArticleInput, TiptapDocument } from "@/application/articles/model";
 import { ApplicationError, forbidden } from "@/application/shared/errors";
@@ -55,7 +56,11 @@ export async function submitArticleAction(
       .map((s) => s.trim())
       .filter(Boolean);
 
+    const idValue = String(formData.get("id") ?? "").trim();
+    const id = idValue.length > 0 ? idValue : undefined;
+
     const input: ArticleInput = {
+      id,
       slug: String(formData.get("slug") ?? "").trim(),
       title: String(formData.get("title") ?? "").trim(),
       excerpt: String(formData.get("excerpt") ?? "").trim(),
@@ -90,4 +95,18 @@ export async function submitArticleAction(
       error: `저장 중 오류가 발생했습니다.${hint}`,
     };
   }
+}
+
+export async function deleteArticleAction(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return;
+  try {
+    await articleService.delete(id);
+  } catch (e) {
+    console.error("[deleteArticleAction]", e);
+    throw e;
+  }
+  revalidatePath("/admin/articles");
+  redirect("/admin/articles");
 }

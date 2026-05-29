@@ -2,7 +2,11 @@ import { notFound } from "next/navigation";
 
 import { ApplicationError } from "@/application/shared/errors";
 import { ArticleForm } from "@/presentation/components/admin/ArticleForm";
-import { submitArticleAction } from "@/presentation/actions/articles";
+import { DeleteArticleButton } from "@/presentation/components/admin/DeleteArticleButton";
+import {
+  deleteArticleAction,
+  submitArticleAction,
+} from "@/presentation/actions/articles";
 import { CATEGORIES } from "@/config/site";
 import { articleService, categoryService } from "@/composition";
 
@@ -31,11 +35,14 @@ export default async function EditArticlePage({
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">아티클 수정</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          /{article.primaryCategorySlug}/{article.slug}
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">아티클 수정</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            /{article.primaryCategorySlug}/{article.slug}
+          </p>
+        </div>
+        <DeleteArticleButton id={article.id} action={deleteArticleAction} />
       </header>
       <ArticleForm
         initial={article}
