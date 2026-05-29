@@ -9,7 +9,7 @@ export default function CheckEmailPage() {
       <p className="text-sm leading-relaxed text-muted-foreground">
         입력하신 이메일로 로그인 링크를 보내드렸습니다.
         <br />
-        링크는 5분 동안만 유효하며, 한 번만 사용할 수 있습니다.
+        링크는 30분 동안만 유효하며, 한 번만 사용할 수 있습니다.
       </p>
     </div>
   );

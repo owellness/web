@@ -35,7 +35,7 @@ const adminEmails = (process.env.ADMIN_EMAILS ?? "")
 
 const authPolicy = createAuthPolicy({ adminEmails });
 
-const MAGIC_LINK_TTL_MINUTES = 5;
+const MAGIC_LINK_TTL_MINUTES = 30;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Trust the deployment host (Vercel sets the URL). Without this, NextAuth
@@ -78,7 +78,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, user }) {
       session.user.id = user.id;
-      session.user.role = (user as { role?: AuthRole }).role ?? "viewer";
+      // Derive the role from the admin whitelist on every request rather than
+      // trusting the DB column (which defaults to 'viewer' and is never
+      // upgraded). This is what lets a whitelisted email actually reach /admin.
+      session.user.role = authPolicy.roleFor(user.email);
       return session;
     },
   },

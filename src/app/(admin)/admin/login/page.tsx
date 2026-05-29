@@ -12,6 +12,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     "허용되지 않은 이메일입니다. 관리자 화이트리스트(ADMIN_EMAILS)에 등록된 주소인지 확인해주세요.",
   Configuration:
     "서버 인증 설정에 문제가 있습니다. AUTH_SECRET·AUTH_URL·DATABASE_URL 환경변수를 확인해주세요.",
+  Verification:
+    "로그인 링크가 만료되었거나 이미 사용되었습니다. 아래에서 새 링크를 요청해 30분 안에 클릭해주세요.",
 };
 
 export default async function AdminLoginPage({
