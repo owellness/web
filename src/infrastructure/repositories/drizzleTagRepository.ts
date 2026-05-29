@@ -14,7 +14,7 @@ export const drizzleTagRepository: TagRepository = {
     const [row] = await db
       .select()
       .from(tags)
-      .where(eq(tags.slug, slug))
+      .where(eq(tags.slug, slug.normalize("NFC")))
       .limit(1);
     return row ? map(row) : null;
   },

@@ -111,8 +111,11 @@ const resolveCategoryId = async (slug: string): Promise<string> => {
 
 export const drizzleArticleRepository: ArticleRepository = {
   async findBySlug(slug) {
+    // Korean slugs arrive from URLs in either NFC or NFD form depending on the
+    // client OS/browser. We always store NFC, so normalize before matching.
+    const normalized = slug.normalize("NFC");
     const row = await db.query.articles.findFirst({
-      where: eq(articles.slug, slug),
+      where: eq(articles.slug, normalized),
       with: {
         author: true,
         primaryCategory: true,

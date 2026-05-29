@@ -54,7 +54,7 @@ export const drizzleAuthorRepository: AuthorRepository = {
     const [row] = await db
       .select()
       .from(authors)
-      .where(eq(authors.slug, slug))
+      .where(eq(authors.slug, slug.normalize("NFC")))
       .limit(1);
     return row ? mapAuthor(row) : null;
   },
