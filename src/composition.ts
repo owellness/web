@@ -1,8 +1,10 @@
 import { createArticleService } from "@/application/articles/service";
 import { createAuthorService } from "@/application/authors/service";
 import { createCategoryService } from "@/application/categories/service";
+import { createFaqService } from "@/application/faq/service";
 import { createMediaService } from "@/application/media/service";
 import { createNewsletterService } from "@/application/newsletter/service";
+import { createPageService } from "@/application/pages/service";
 import { createSearchService } from "@/application/search/service";
 import { createTagService } from "@/application/tags/service";
 import { SITE_NAME, SITE_URL } from "@/config/site";
@@ -15,6 +17,8 @@ import { resendNewsletterMailer } from "@/infrastructure/email/newsletterMailer"
 import { drizzleArticleRepository } from "@/infrastructure/repositories/drizzleArticleRepository";
 import { drizzleAuthorRepository } from "@/infrastructure/repositories/drizzleAuthorRepository";
 import { drizzleCategoryRepository } from "@/infrastructure/repositories/drizzleCategoryRepository";
+import { drizzleFaqRepository } from "@/infrastructure/repositories/drizzleFaqRepository";
+import { drizzlePageRepository } from "@/infrastructure/repositories/drizzlePageRepository";
 import { drizzleSubscriberRepository } from "@/infrastructure/repositories/drizzleSubscriberRepository";
 import { drizzleTagRepository } from "@/infrastructure/repositories/drizzleTagRepository";
 import { postgresFtsAdapter } from "@/infrastructure/search/postgresFtsAdapter";
@@ -30,6 +34,13 @@ export const articleService = createArticleService({
 });
 
 export const categoryService = createCategoryService(drizzleCategoryRepository);
+
+export const faqService = createFaqService(drizzleFaqRepository);
+
+export const pageService = createPageService({
+  repository: drizzlePageRepository,
+  htmlRenderer: tiptapHtmlRenderer,
+});
 
 export const authorService = createAuthorService({
   repository: drizzleAuthorRepository,

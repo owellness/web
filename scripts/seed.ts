@@ -1,7 +1,7 @@
 import "dotenv/config";
 
 import { CATEGORIES } from "../src/config/site";
-import { categoryService } from "../src/composition";
+import { categoryService, faqService, pageService } from "../src/composition";
 
 async function main() {
   if (!process.env.DATABASE_URL) {
@@ -14,6 +14,13 @@ async function main() {
   for (const cat of CATEGORIES) {
     console.log(`  ✓ ${cat.slug} (${cat.name})`);
   }
+
+  console.log("Seeding FAQ…");
+  await faqService.ensureSeeded();
+
+  console.log("Seeding pages (소개)…");
+  await pageService.ensureSeeded();
+
   console.log("Done.");
 }
 

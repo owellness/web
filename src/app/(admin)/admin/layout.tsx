@@ -32,6 +32,18 @@ export default function AdminLayout({
               카테고리
             </Link>
             <Link
+              href="/admin/pages"
+              className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
+            >
+              페이지
+            </Link>
+            <Link
+              href="/admin/faq"
+              className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
+            >
+              FAQ
+            </Link>
+            <Link
               href="/admin/subscribers"
               className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
             >
