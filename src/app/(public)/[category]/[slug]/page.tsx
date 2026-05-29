@@ -85,8 +85,20 @@ export default async function ArticlePage({
     article = await articleService.getBySlug(slug);
   } catch (e) {
     if (e instanceof ApplicationError && e.code === "NOT_FOUND") {
+      // TEMP diagnostic: dump the queried slug and the slugs actually stored,
+      // with code points, to pinpoint the mismatch.
+      const cp = (s: string) =>
+        Array.from(s)
+          .map((c) => c.codePointAt(0)?.toString(16))
+          .join(",");
+      const stored = await articleService
+        .list({ status: "all" }, { limit: 20 })
+        .then((r) =>
+          r.items.map((a) => `${a.primaryCategorySlug}/${a.slug}[${cp(a.slug)}]`),
+        )
+        .catch(() => ["<list failed>"]);
       console.warn(
-        `[article] notFound: slug not in DB. category=${category} slug=${slug} (NFC=${slug.normalize("NFC")})`,
+        `[article] notFound. queried category=${category} slug=${JSON.stringify(slug)} cp=[${cp(slug)}] | stored=${JSON.stringify(stored)}`,
       );
       notFound();
     }
