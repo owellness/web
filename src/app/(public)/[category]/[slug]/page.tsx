@@ -84,15 +84,26 @@ export default async function ArticlePage({
   try {
     article = await articleService.getBySlug(slug);
   } catch (e) {
-    // Genuine "not found" → 404. Real DB errors must surface (500 + logs)
-    // instead of being masked as a misleading "page not found".
     if (e instanceof ApplicationError && e.code === "NOT_FOUND") {
+      console.warn(
+        `[article] notFound: slug not in DB. category=${category} slug=${slug} (NFC=${slug.normalize("NFC")})`,
+      );
       notFound();
     }
     throw e;
   }
-  if (article.primaryCategorySlug !== category) notFound();
-  if (article.status !== "published") notFound();
+  if (article.primaryCategorySlug !== category) {
+    console.warn(
+      `[article] notFound: category mismatch. urlCategory=${category} articleCategory=${article.primaryCategorySlug} slug=${slug}`,
+    );
+    notFound();
+  }
+  if (article.status !== "published") {
+    console.warn(
+      `[article] notFound: not published. status=${article.status} slug=${slug}`,
+    );
+    notFound();
+  }
 
   const cat = CATEGORY_BY_SLUG[category as CategorySlug];
   const articleUrl = `${SITE_URL}/${article.primaryCategorySlug}/${article.slug}`;
