@@ -114,17 +114,53 @@ export const drizzleArticleRepository: ArticleRepository = {
     // Korean slugs arrive from URLs in either NFC or NFD form depending on the
     // client OS/browser. We always store NFC, so normalize before matching.
     const normalized = slug.normalize("NFC");
-    const row = await db.query.articles.findFirst({
-      where: eq(articles.slug, normalized),
-      with: {
-        author: true,
-        primaryCategory: true,
-        medicalReviewer: true,
-        tags: { with: { tag: true } },
-      },
-    });
+
+    // Use explicit queries rather than a single nested relational query.
+    // The relational form joined `authors` twice (author + medicalReviewer)
+    // plus the tags m2m, which is fragile over neon-http; splitting it keeps
+    // detail lookups reliable.
+    const [row] = await db
+      .select()
+      .from(articles)
+      .where(eq(articles.slug, normalized))
+      .limit(1);
     if (!row) return null;
-    return mapArticle(row as ArticleWithRelations);
+
+    const [author] = await db
+      .select()
+      .from(authors)
+      .where(eq(authors.id, row.authorId))
+      .limit(1);
+    const [primaryCategory] = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.id, row.primaryCategoryId))
+      .limit(1);
+    if (!author || !primaryCategory) return null;
+
+    let medicalReviewer: AuthorRow | null = null;
+    if (row.medicalReviewerId) {
+      const [mr] = await db
+        .select()
+        .from(authors)
+        .where(eq(authors.id, row.medicalReviewerId))
+        .limit(1);
+      medicalReviewer = mr ?? null;
+    }
+
+    const tagRows = await db
+      .select({ tag: tags })
+      .from(articleTags)
+      .innerJoin(tags, eq(articleTags.tagId, tags.id))
+      .where(eq(articleTags.articleId, row.id));
+
+    return mapArticle({
+      ...row,
+      author,
+      primaryCategory,
+      medicalReviewer,
+      tags: tagRows,
+    });
   },
 
   async listSummaries(

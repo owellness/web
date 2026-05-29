@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { ApplicationError } from "@/application/shared/errors";
 import { ArticleForm } from "@/presentation/components/admin/ArticleForm";
 import { submitArticleAction } from "@/presentation/actions/articles";
 import { CATEGORIES } from "@/config/site";
@@ -15,10 +16,17 @@ export default async function EditArticlePage({
   await categoryService.ensureSeeded();
   const { slug } = await params;
 
-  const article = await articleService
-    .getBySlug(slug)
-    .catch(() => null);
-  if (!article) notFound();
+  // Only a genuine "not found" should 404. Real DB errors must surface (500 +
+  // logs) rather than be masked as a misleading "page not found".
+  let article;
+  try {
+    article = await articleService.getBySlug(slug);
+  } catch (e) {
+    if (e instanceof ApplicationError && e.code === "NOT_FOUND") {
+      notFound();
+    }
+    throw e;
+  }
 
   return (
     <div className="space-y-6">
