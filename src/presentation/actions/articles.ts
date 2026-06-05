@@ -104,9 +104,18 @@ export async function deleteArticleAction(formData: FormData): Promise<void> {
   try {
     await articleService.delete(id);
   } catch (e) {
-    console.error("[deleteArticleAction]", e);
-    throw e;
+    // Idempotent: if the article is already gone, the admin's intent is
+    // satisfied — fall through to the redirect instead of throwing a 500.
+    if (!(e instanceof ApplicationError && e.code === "NOT_FOUND")) {
+      console.error("[deleteArticleAction]", e);
+      throw e;
+    }
   }
-  revalidatePath("/admin/articles");
+  // Best-effort cache refresh — must not block the redirect back to the list.
+  try {
+    revalidatePath("/admin/articles");
+  } catch (e) {
+    console.warn("[deleteArticleAction] revalidate failed (ignored)", e);
+  }
   redirect("/admin/articles");
 }
