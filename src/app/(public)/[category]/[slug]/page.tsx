@@ -41,12 +41,24 @@ export async function generateMetadata({
     if (article.primaryCategorySlug !== category) return {};
 
     const title = article.seoTitle ?? article.title;
-    // Page meta description stays the curated excerpt; the social (OG/Twitter)
-    // description uses the article body so shared cards show real content.
-    const metaDescription = article.seoDescription ?? article.excerpt;
+    // `??` only falls back on null/undefined — empty/whitespace strings would
+    // slip through and produce a blank og:description. Trim to null first.
+    const blankToNull = (s?: string | null) =>
+      s && s.trim().length > 0 ? s.trim() : null;
+    const bodyExcerpt = blankToNull(buildBodyExcerpt(article.contentHtml));
+
+    // Page <meta description>: curated excerpt for search snippets.
+    const metaDescription =
+      blankToNull(article.seoDescription) ??
+      blankToNull(article.excerpt) ??
+      SITE_CONFIG.description;
+    // Social (OG/Twitter) description: prefer the article body so shared cards
+    // show real content; fall back to SEO description / excerpt.
     const ogDescription =
-      article.seoDescription ??
-      (buildBodyExcerpt(article.contentHtml) || article.excerpt);
+      bodyExcerpt ??
+      blankToNull(article.seoDescription) ??
+      blankToNull(article.excerpt) ??
+      SITE_CONFIG.description;
     const url = `${SITE_URL}/${article.primaryCategorySlug}/${article.slug}`;
     const ogImage = article.ogImageUrl ?? SITE_CONFIG.defaultOgImage;
     return {
@@ -72,7 +84,8 @@ export async function generateMetadata({
         images: [ogImage],
       },
     };
-  } catch {
+  } catch (e) {
+    console.warn("[article generateMetadata] falling back to defaults:", e);
     return {};
   }
 }
