@@ -52,7 +52,7 @@ export const articleInputSchema = z.object({
     .max(160)
     .regex(
       SLUG_PATTERN,
-      "슬러그는 한글·영문·숫자와 하이픈(-)만 사용할 수 있습니다.",
+      "슬러그는 영문 소문자·숫자·하이픈만 사용할 수 있습니다. (한글은 자동 로마자 변환됩니다)",
     ),
   title: z.string().min(1).max(200),
   excerpt: z.string().min(1).max(300),

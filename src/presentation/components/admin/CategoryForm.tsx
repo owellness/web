@@ -39,11 +39,12 @@ export function CategoryForm({ initial, action, submitLabel }: CategoryFormProps
         <input
           name="slug"
           defaultValue={initial?.slug ?? ""}
-          placeholder="예: sleep 또는 수면 (비우면 이름에서 자동 생성)"
+          placeholder="예: sleep (비우면 이름에서 자동 생성)"
           className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-card-foreground outline-none focus:border-accent"
         />
         <span className="mt-1 block text-xs text-muted-foreground">
-          공개 URL은 <code>/{"{슬러그}"}</code> 형태가 됩니다.
+          영문·숫자·하이픈만 사용하세요. 한글 입력 시 저장 시 자동으로 로마자로
+          변환됩니다. 공개 URL은 <code>/{"{슬러그}"}</code> 형태입니다.
         </span>
       </label>
 
