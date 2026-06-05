@@ -38,6 +38,15 @@ export const drizzleSubscriberRepository: SubscriberRepository = {
     return rows.map(map);
   },
 
+  async listConfirmedEmails() {
+    const rows = await db
+      .select({ email: newsletterSubscribers.email })
+      .from(newsletterSubscribers)
+      .where(eq(newsletterSubscribers.status, "confirmed"))
+      .orderBy(desc(newsletterSubscribers.createdAt));
+    return rows.map((r) => r.email);
+  },
+
   async countByStatus() {
     const rows = await db
       .select({
@@ -69,7 +78,11 @@ export const drizzleSubscriberRepository: SubscriberRepository = {
         set: {
           source: input.source,
           consentedAt: input.consentedAt,
-          status: sql`case when ${newsletterSubscribers.status} = 'confirmed' then 'confirmed' else 'pending' end`,
+          // The CASE arms are bare string literals, so Postgres resolves the
+          // expression to `text`; assigning text to the enum column fails with
+          // "column \"status\" is of type subscriber_status but expression is
+          // of type text". Cast the result back to the enum type explicitly.
+          status: sql`(case when ${newsletterSubscribers.status} = 'confirmed' then 'confirmed' else 'pending' end)::"subscriber_status"`,
         },
       })
       .returning();

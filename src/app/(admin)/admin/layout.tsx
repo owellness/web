@@ -49,6 +49,12 @@ export default function AdminLayout({
             >
               구독자
             </Link>
+            <Link
+              href="/admin/newsletter"
+              className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
+            >
+              발송
+            </Link>
             <ThemeToggle />
           </nav>
         </div>

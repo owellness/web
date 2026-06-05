@@ -12,6 +12,7 @@ import {
 import { SITE_CONFIG, SITE_NAME, SITE_URL } from "@/config/site";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
 import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDisclaimer";
+import { NewsletterCTA } from "@/presentation/components/public/NewsletterCTA";
 
 import { articleService, categoryService } from "@/composition";
 
@@ -234,6 +235,8 @@ export default async function ArticlePage({
             ))}
           </ul>
         ) : null}
+
+        <NewsletterCTA />
 
         {isMedical ? <MedicalDisclaimer /> : null}
       </article>

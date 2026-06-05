@@ -23,3 +23,32 @@ export const subscribeInputSchema = z.object({
 });
 
 export type SubscribeInput = z.infer<typeof subscribeInputSchema>;
+
+// ── Campaigns (broadcast) ───────────────────────────────────────
+export const CAMPAIGN_STATUS = ["draft", "sending", "sent", "failed"] as const;
+export type CampaignStatus = (typeof CAMPAIGN_STATUS)[number];
+
+export type TiptapDocument = { type: "doc"; content?: unknown[] };
+
+export type Campaign = {
+  id: string;
+  subject: string;
+  contentJson: TiptapDocument;
+  contentHtml: string;
+  status: CampaignStatus;
+  recipientCount: number;
+  sentCount: number;
+  error: string | null;
+  sentAt: Date | null;
+  createdAt: Date;
+};
+
+export const campaignInputSchema = z.object({
+  subject: z.string().min(1, "제목을 입력해주세요.").max(200),
+  contentJson: z.object({
+    type: z.literal("doc"),
+    content: z.array(z.unknown()).optional(),
+  }),
+});
+
+export type CampaignInput = z.infer<typeof campaignInputSchema>;

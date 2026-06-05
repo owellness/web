@@ -1,4 +1,8 @@
-import type { NewsletterMailer } from "@/application/newsletter/ports";
+import type {
+  NewsletterBroadcaster,
+  NewsletterMailer,
+} from "@/application/newsletter/ports";
+import { SITE_NAME, SITE_URL } from "@/config/site";
 
 import { RESEND_FROM, resend } from "./resendClient";
 
@@ -44,5 +48,56 @@ export const resendNewsletterMailer: NewsletterMailer = {
     if (error) {
       throw new Error(`Failed to send confirm email: ${error.message}`);
     }
+  },
+};
+
+// Wraps the admin-authored article body in a simple, inline-styled email shell
+// with a per-recipient unsubscribe footer.
+const renderCampaignHtml = (bodyHtml: string, unsubscribeUrl: string) =>
+  `<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0;background:#f4f2ec;padding:24px;font-family:Pretendard,-apple-system,system-ui,sans-serif;color:#14110f">
+  <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:14px;border:1px solid #e7e2d8;overflow:hidden">
+    <div style="padding:28px 28px 8px">
+      <a href="${SITE_URL}" style="font-size:15px;font-weight:700;color:#3b7a57;text-decoration:none">${SITE_NAME}</a>
+    </div>
+    <div style="padding:8px 28px 28px;font-size:16px;line-height:1.75">${bodyHtml}</div>
+    <div style="border-top:1px solid #eee;padding:18px 28px;font-size:12px;color:#888">
+      이 메일은 ${SITE_NAME} 뉴스레터를 구독하셔서 발송되었습니다.<br/>
+      <a href="${unsubscribeUrl}" style="color:#888">구독 해지</a> · <a href="${SITE_URL}" style="color:#888">${SITE_URL}</a>
+    </div>
+  </div>
+</body></html>`;
+
+const stripTags = (html: string) =>
+  html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+const BATCH_SIZE = 100;
+
+export const resendNewsletterBroadcaster: NewsletterBroadcaster = {
+  async sendBroadcast({ subject, html, recipients }) {
+    let sent = 0;
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+      const chunk = recipients.slice(i, i + BATCH_SIZE);
+      const payload = chunk.map((r) => ({
+        from: RESEND_FROM,
+        to: r.email,
+        subject,
+        html: renderCampaignHtml(html, r.unsubscribeUrl),
+        text: `${stripTags(html)}\n\n구독 해지: ${r.unsubscribeUrl}`,
+        headers: {
+          "List-Unsubscribe": `<${r.unsubscribeUrl}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+      }));
+      const { error } = await resend.batch.send(payload);
+      if (error) {
+        throw new Error(
+          `Resend batch failed at ${i}-${i + chunk.length}: ${error.message}`,
+        );
+      }
+      sent += chunk.length;
+    }
+    return { sent };
   },
 };
