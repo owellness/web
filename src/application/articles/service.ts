@@ -102,16 +102,23 @@ export const createArticleService = ({
     const article = await repository.findById(id);
     if (!article) throw notFound("Article");
     await repository.delete(id);
-    await Promise.all([
-      revalidation.revalidateArticle(
-        article.slug,
-        article.primaryCategorySlug as CategorySlug,
-      ),
-      revalidation.revalidateCategory(
-        article.primaryCategorySlug as CategorySlug,
-      ),
-      revalidation.revalidateHome(),
-    ]);
+    // Cache revalidation is best-effort: the row is already gone, so a failing
+    // revalidatePath must NOT turn a completed delete into a thrown 500 (which
+    // would strand the admin on the now-deleted article's edit page).
+    try {
+      await Promise.all([
+        revalidation.revalidateArticle(
+          article.slug,
+          article.primaryCategorySlug as CategorySlug,
+        ),
+        revalidation.revalidateCategory(
+          article.primaryCategorySlug as CategorySlug,
+        ),
+        revalidation.revalidateHome(),
+      ]);
+    } catch (e) {
+      console.warn("[articleService.delete] revalidation failed (ignored)", e);
+    }
   },
 });
 
