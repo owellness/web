@@ -16,7 +16,7 @@ export default async function AdminDashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           {
             href: "/admin/articles",
@@ -27,6 +27,16 @@ export default async function AdminDashboardPage() {
             href: "/admin/categories",
             title: "카테고리·태그",
             desc: "콘텐츠 분류 체계와 SEO 메타데이터 관리.",
+          },
+          {
+            href: "/admin/pages",
+            title: "페이지",
+            desc: "소개 등 고정 페이지의 제목·본문·SEO 수정.",
+          },
+          {
+            href: "/admin/faq",
+            title: "자주 묻는 질문",
+            desc: "FAQ 질문·답변 추가, 수정, 공개 여부 관리.",
           },
           {
             href: "/admin/subscribers",

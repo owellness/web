@@ -252,6 +252,22 @@ export const howtoSteps = pgTable(
 );
 
 // ─────────────────────────────────────────────────────────────
+// Domain: editable site pages (singletons keyed by slug, e.g. "about")
+// ─────────────────────────────────────────────────────────────
+
+export const sitePages = pgTable("site_pages", {
+  id: uuid("id").primaryKey().default(idDefault()),
+  slug: varchar("slug", { length: 80 }).notNull().unique(),
+  title: varchar("title", { length: 200 }).notNull(),
+  bodyHtml: text("body_html").notNull().default(""),
+  bodyJson: jsonb("body_json").$type<unknown>().notNull(),
+  seoTitle: varchar("seo_title", { length: 200 }),
+  seoDescription: varchar("seo_description", { length: 300 }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
+});
+
+// ─────────────────────────────────────────────────────────────
 // Domain: newsletter subscribers (double opt-in)
 // ─────────────────────────────────────────────────────────────
 

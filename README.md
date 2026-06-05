@@ -21,7 +21,7 @@ src/
   app/                              # Tier 1 (Presentation) — Next.js routes
   presentation/                     # Tier 1 — UI components, actions, metadata
   application/                      # Tier 2 — pure business logic, ports, models
-    {articles,categories,tags,authors,newsletter,auth,seo}/
+    {articles,categories,tags,authors,newsletter,faq,pages,auth,seo}/
   infrastructure/                   # Tier 3 — DB, email, content adapters
     {db,repositories,email,auth,content,cache,storage}/
   composition.ts                    # composition root (wires services + adapters)
@@ -82,7 +82,7 @@ pnpm dev
 - `pnpm db:generate` — Drizzle 마이그레이션 SQL 생성
 - `pnpm db:push` — Neon에 스키마 적용
 - `pnpm db:studio` — Drizzle Studio
-- `pnpm db:seed` — 카테고리 시드
+- `pnpm db:seed` — 카테고리·FAQ·소개 페이지 시드
 
 ## SEO / AEO / GEO 체크리스트
 

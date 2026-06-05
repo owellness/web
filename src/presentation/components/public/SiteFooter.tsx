@@ -29,8 +29,13 @@ export async function SiteFooter() {
           </ul>
         </div>
         <div>
-          <p className="text-sm font-semibold text-foreground">소식</p>
+          <p className="text-sm font-semibold text-foreground">안내</p>
           <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
+            <li>
+              <Link href="/about" className="hover:text-foreground">
+                소개
+              </Link>
+            </li>
             <li>
               <Link href="/newsletter" className="hover:text-foreground">
                 뉴스레터 구독
