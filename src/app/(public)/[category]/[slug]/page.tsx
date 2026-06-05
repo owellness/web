@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ApplicationError } from "@/application/shared/errors";
+import { buildBodyExcerpt } from "@/application/seo/articleMeta";
 import { extractFaqFromHtml } from "@/application/seo/faqExtractor";
 import {
   buildArticleJsonLd,
@@ -40,19 +41,25 @@ export async function generateMetadata({
     if (article.primaryCategorySlug !== category) return {};
 
     const title = article.seoTitle ?? article.title;
-    const description = article.seoDescription ?? article.excerpt;
+    // Page meta description stays the curated excerpt; the social (OG/Twitter)
+    // description uses the article body so shared cards show real content.
+    const metaDescription = article.seoDescription ?? article.excerpt;
+    const ogDescription =
+      article.seoDescription ??
+      (buildBodyExcerpt(article.contentHtml) || article.excerpt);
     const url = `${SITE_URL}/${article.primaryCategorySlug}/${article.slug}`;
+    const ogImage = article.ogImageUrl ?? SITE_CONFIG.defaultOgImage;
     return {
       title,
-      description,
+      description: metaDescription,
       alternates: { canonical: article.canonicalUrl ?? url },
       openGraph: {
         type: "article",
         url,
         title,
-        description,
+        description: ogDescription,
         siteName: SITE_NAME,
-        images: [article.ogImageUrl ?? SITE_CONFIG.defaultOgImage],
+        images: [ogImage],
         publishedTime: article.publishedAt?.toISOString(),
         modifiedTime: article.updatedAt.toISOString(),
         authors: [article.authorName],
@@ -61,8 +68,8 @@ export async function generateMetadata({
       twitter: {
         card: "summary_large_image",
         title,
-        description,
-        images: [article.ogImageUrl ?? SITE_CONFIG.defaultOgImage],
+        description: ogDescription,
+        images: [ogImage],
       },
     };
   } catch {

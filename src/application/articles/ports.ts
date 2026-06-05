@@ -14,6 +14,8 @@ export type ArticleStorageInput = ArticleInput & {
 };
 
 export interface ArticleRepository {
+  /** Next sequential number used for auto-generated numeric slugs. */
+  nextSlugNumber(): Promise<number>;
   findBySlug(slug: string): Promise<Article | null>;
   findById(id: string): Promise<Article | null>;
   listSummaries(

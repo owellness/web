@@ -129,12 +129,12 @@ export function ArticleForm({
           <input
             name="slug"
             defaultValue={initial?.slug ?? ""}
-            placeholder="예: sleep-hormone-guide (비워두면 제목에서 자동 생성)"
+            placeholder="비워두면 자동으로 번호가 매겨집니다 (예: /sleep/42)"
             className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-sm text-card-foreground outline-none focus:border-accent"
           />
           <span className="mt-1 block text-xs text-muted-foreground">
-            영문·숫자·하이픈만 사용하세요. 한글을 입력해도 저장 시 자동으로
-            로마자로 변환됩니다(예: 수면 호르몬 → sumyeon-horeumon).
+            비워두면 자동 번호가 배정됩니다. 직접 입력 시 영문·숫자·하이픈만
+            사용하세요(한글은 자동 로마자 변환).
           </span>
         </label>
 
@@ -224,7 +224,12 @@ export function ArticleForm({
         </div>
 
         <div className="space-y-2">
-          <span className="text-sm font-medium text-foreground">대표 이미지</span>
+          <span className="text-sm font-medium text-foreground">
+            대표 이미지 (OG)
+          </span>
+          <p className="text-xs text-muted-foreground">
+            비워두면 본문의 첫 번째 이미지가 자동으로 사용됩니다.
+          </p>
           {ogImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

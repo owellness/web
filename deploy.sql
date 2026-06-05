@@ -226,6 +226,11 @@ ALTER TABLE "newsletter_campaigns" ADD CONSTRAINT "newsletter_campaigns_created_
 CREATE INDEX "newsletter_campaigns_created_at_idx" ON "newsletter_campaigns" USING btree ("created_at" DESC NULLS LAST);
 
 -- ─────────────────────────────────────────────
+-- Numeric article slug sequence — migration 0002
+-- ─────────────────────────────────────────────
+CREATE SEQUENCE IF NOT EXISTS "article_slug_seq" START WITH 1 INCREMENT BY 1;
+
+-- ─────────────────────────────────────────────
 -- Seed: 카테고리 4개 (앱이 자동 시드하지만 사전 삽입해 둠)
 -- ─────────────────────────────────────────────
 INSERT INTO "categories" ("slug", "name", "description", "position") VALUES

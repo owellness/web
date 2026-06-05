@@ -1,7 +1,8 @@
-import { CATEGORY_BY_SLUG, type CategorySlug } from "@/config/site";
+import { type CategorySlug } from "@/config/site";
 import { notFound, validationFailed } from "@/application/shared/errors";
 import type { Paginated, Pagination } from "@/application/shared/pagination";
 import { slugify } from "@/application/shared/slug";
+import { extractFirstImageUrl } from "@/application/seo/articleMeta";
 import { articleInputSchema, type Article, type ArticleInput, type ArticleSummary } from "./model";
 import type {
   ArticleListFilter,
@@ -49,14 +50,14 @@ export const createArticleService = ({
   },
 
   async upsert(rawInput: unknown): Promise<Article> {
-    // Normalize the slug before validation: run whatever the admin typed
-    // through slugify, and fall back to the title when it's left blank. This
-    // lets editors type Korean (or nothing) without hitting a format error.
+    // Slug: use what the admin typed (romanized). When left blank, generate a
+    // short numeric slug from a DB sequence so URLs stay clean and copyable.
     const candidate = (rawInput ?? {}) as Record<string, unknown>;
     const typedSlug = typeof candidate.slug === "string" ? candidate.slug : "";
-    const typedTitle =
-      typeof candidate.title === "string" ? candidate.title : "";
-    const normalizedSlug = slugify(typedSlug) || slugify(typedTitle);
+    let normalizedSlug = slugify(typedSlug);
+    if (!normalizedSlug) {
+      normalizedSlug = String(await repository.nextSlugNumber());
+    }
 
     const parsed = articleInputSchema.safeParse({
       ...candidate,
@@ -67,16 +68,15 @@ export const createArticleService = ({
     }
     const input: ArticleInput = parsed.data;
 
-    if (!(input.primaryCategorySlug in CATEGORY_BY_SLUG)) {
-      throw validationFailed(
-        `Unknown category: ${input.primaryCategorySlug}`,
-      );
-    }
-
     const rendered = await htmlRenderer.renderTiptapToHtml(input.contentJson);
+
+    // Auto-fill the OG image from the first body image when not set explicitly.
+    const ogImageUrl =
+      input.ogImageUrl ?? extractFirstImageUrl(rendered.html) ?? null;
 
     const article = await repository.upsert({
       ...input,
+      ogImageUrl,
       contentHtml: rendered.html,
       readingTimeSec: rendered.readingTimeSec,
     });

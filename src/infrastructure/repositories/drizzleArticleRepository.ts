@@ -149,6 +149,22 @@ const loadArticleWithRelations = async (
 };
 
 export const drizzleArticleRepository: ArticleRepository = {
+  async nextSlugNumber() {
+    // Uses a Postgres sequence so numeric slugs are unique without races.
+    // Falls back to a timestamp if the sequence isn't present yet (migration
+    // not applied), keeping saves working.
+    try {
+      const res = await db.execute<{ n: string | number }>(
+        sql`select nextval('article_slug_seq') as n`,
+      );
+      const n = Number(res.rows?.[0]?.n);
+      if (Number.isFinite(n) && n > 0) return Math.trunc(n);
+    } catch (e) {
+      console.warn("[nextSlugNumber] sequence unavailable, using timestamp:", e);
+    }
+    return Date.now();
+  },
+
   async findBySlug(slug) {
     // URL params may arrive percent-encoded and/or in NFD form. Decode +
     // NFC-normalize, then match both NFC and NFD against the stored value.
