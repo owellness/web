@@ -26,7 +26,7 @@ export function NewsletterCTA({
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         이런 글이 좋으셨다면 다음 주 인사이트를 이메일로 받아보세요. 곧 출시될
-        오 웰니스 앱의 진단·코칭 기능 베타도 가장 먼저 알려드립니다.
+        오! 웰니스 앱의 진단·코칭 기능 베타도 가장 먼저 알려드립니다.
       </p>
       <div className="mt-5">
         <NewsletterForm

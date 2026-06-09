@@ -12,6 +12,7 @@ import type {
 
 export type SiteIdentity = {
   name: string;
+  nameEn?: string;
   legalName: string;
   url: string;
   description: string;
@@ -28,6 +29,7 @@ export const buildOrganizationJsonLd = (
   "@context": "https://schema.org",
   "@type": "Organization",
   name: site.legalName,
+  alternateName: site.nameEn,
   url: site.url,
   logo: `${site.url}/logo.png`,
   sameAs: [site.social?.instagram, site.social?.youtube].filter(

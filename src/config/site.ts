@@ -54,19 +54,24 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
   "http://localhost:3000";
 
-export const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME ?? "오 웰니스";
+export const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME ?? "오! 웰니스";
+
+// English/Latin brand name, used for alternateName in structured data and any
+// English-facing copy.
+export const SITE_NAME_EN = "O! Wellness";
 
 export const SITE_CONFIG = {
   name: SITE_NAME,
-  legalName: "오 웰니스",
+  nameEn: SITE_NAME_EN,
+  legalName: "오! 웰니스",
   url: SITE_URL,
   locale: "ko_KR" as const,
   description:
-    "수면, 영양, 운동, 여성 건강까지. 근거 기반 웰니스 콘텐츠와 큐레이션을 제공하는 오 웰니스입니다.",
+    "수면, 영양, 운동, 여성 건강까지. 근거 기반 웰니스 콘텐츠와 큐레이션을 제공하는 오! 웰니스입니다.",
   defaultOgImage: `${SITE_URL}/og/default.png`,
   twitter: undefined as string | undefined,
   authorOrg: {
-    name: "오 웰니스",
+    name: "오! 웰니스",
     url: SITE_URL,
   },
   social: {
