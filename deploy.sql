@@ -231,6 +231,18 @@ CREATE INDEX "newsletter_campaigns_created_at_idx" ON "newsletter_campaigns" USI
 CREATE SEQUENCE IF NOT EXISTS "article_slug_seq" START WITH 1 INCREMENT BY 1;
 
 -- ─────────────────────────────────────────────
+-- Site settings (single-row) — migration 0003
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS "site_settings" (
+	"id" varchar(20) PRIMARY KEY DEFAULT 'default' NOT NULL,
+	"hero_eyebrow" varchar(120) DEFAULT '' NOT NULL,
+	"hero_title" text DEFAULT '' NOT NULL,
+	"hero_subtitle" text DEFAULT '' NOT NULL,
+	"favicon_url" text,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+-- ─────────────────────────────────────────────
 -- Seed: 카테고리 4개 (앱이 자동 시드하지만 사전 삽입해 둠)
 -- ─────────────────────────────────────────────
 INSERT INTO "categories" ("slug", "name", "description", "position") VALUES

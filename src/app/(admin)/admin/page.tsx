@@ -43,6 +43,11 @@ export default async function AdminDashboardPage() {
             title: "뉴스레터 구독자",
             desc: "구독 현황과 발송 이력 확인.",
           },
+          {
+            href: "/admin/settings",
+            title: "사이트 설정",
+            desc: "홈 화면 소개 문구와 파비콘 수정.",
+          },
         ].map((card) => (
           <Link
             key={card.href}
