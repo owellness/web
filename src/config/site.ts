@@ -63,7 +63,7 @@ export const SITE_CONFIG = {
   locale: "ko_KR" as const,
   description:
     "수면, 영양, 운동, 여성 건강까지. 근거 기반 웰니스 콘텐츠와 큐레이션을 제공하는 오 웰니스입니다.",
-  defaultOgImage: `${SITE_URL}/og/default.png`,
+  defaultOgImage: `${SITE_URL}/api/og`,
   twitter: undefined as string | undefined,
   authorOrg: {
     name: "오 웰니스",
@@ -78,5 +78,22 @@ export const SITE_CONFIG = {
     naver: process.env.NAVER_SITE_VERIFICATION,
   },
 } as const;
+
+// Branded 1200×630 social-share image via the dynamic OG route
+// (src/app/api/og). Centralized so every page links a real generated image
+// instead of a static file that may not exist.
+export const ogImageUrl = (params?: {
+  title?: string;
+  category?: string;
+  author?: string;
+}): string => {
+  const base = `${SITE_URL}/api/og`;
+  const sp = new URLSearchParams();
+  if (params?.title) sp.set("title", params.title);
+  if (params?.category) sp.set("category", params.category);
+  if (params?.author) sp.set("author", params.author);
+  const qs = sp.toString();
+  return qs ? `${base}?${qs}` : base;
+};
 
 export const DEFAULT_LOCALE = "ko" as const;

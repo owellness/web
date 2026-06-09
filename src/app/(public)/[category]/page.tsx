@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { buildBreadcrumbJsonLd } from "@/application/seo/jsonld";
 import { articleService, categoryService } from "@/composition";
-import { SITE_CONFIG, SITE_NAME, SITE_URL } from "@/config/site";
+import { SITE_NAME, SITE_URL, ogImageUrl } from "@/config/site";
 import { ArticleCard } from "@/presentation/components/public/ArticleCard";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
 
@@ -36,7 +36,7 @@ export async function generateMetadata({
       url,
       type: "website",
       siteName: SITE_NAME,
-      images: [SITE_CONFIG.defaultOgImage],
+      images: [ogImageUrl({ title: cat.name, category: cat.name })],
     },
   };
 }

@@ -51,6 +51,16 @@ export const buildLlmsTxt = (input: LlmsTxtInput): string => {
     lines.push("");
   }
 
+  lines.push("## Pages");
+  lines.push("");
+  lines.push(
+    `- [소개](${input.siteUrl}/about): ${input.siteName} 소개와 콘텐츠 원칙`,
+  );
+  lines.push(
+    `- [자주 묻는 질문](${input.siteUrl}/faq): 서비스·콘텐츠에 대한 자주 묻는 질문`,
+  );
+  lines.push("");
+
   lines.push("## Policies");
   lines.push("");
   lines.push(

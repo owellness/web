@@ -10,7 +10,7 @@ import {
   buildBreadcrumbJsonLd,
   buildFaqJsonLd,
 } from "@/application/seo/jsonld";
-import { SITE_CONFIG, SITE_NAME, SITE_URL } from "@/config/site";
+import { SITE_CONFIG, SITE_NAME, SITE_URL, ogImageUrl } from "@/config/site";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
 import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDisclaimer";
 import { NewsletterCTA } from "@/presentation/components/public/NewsletterCTA";
@@ -60,7 +60,13 @@ export async function generateMetadata({
       blankToNull(article.excerpt) ??
       SITE_CONFIG.description;
     const url = `${SITE_URL}/${article.primaryCategorySlug}/${article.slug}`;
-    const ogImage = article.ogImageUrl ?? SITE_CONFIG.defaultOgImage;
+    const ogImage =
+      article.ogImageUrl ??
+      ogImageUrl({
+        title,
+        category: catExists.name,
+        author: article.authorName,
+      });
     return {
       title,
       description: metaDescription,

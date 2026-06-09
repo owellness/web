@@ -1,15 +1,27 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
+import {
+  buildOrganizationJsonLd,
+  buildWebSiteJsonLd,
+} from "@/application/seo/jsonld";
 import { categoryService } from "@/composition";
-import { SITE_NAME } from "@/config/site";
+import { SITE_CONFIG, SITE_NAME, SITE_URL } from "@/config/site";
+import { JsonLd } from "@/presentation/components/public/JsonLd";
 
 export const revalidate = 300; // ISR every 5 min
+
+export const metadata: Metadata = {
+  alternates: { canonical: SITE_URL },
+};
 
 export default async function HomePage() {
   const cats = await categoryService.listAll().catch(() => []);
   const ctaSlug = cats[0]?.slug;
   return (
     <>
+      <JsonLd schema={buildWebSiteJsonLd(SITE_CONFIG)} />
+      <JsonLd schema={buildOrganizationJsonLd(SITE_CONFIG)} />
       <section className="border-b border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-20 sm:px-6 md:py-28">
           <p className="text-sm font-medium uppercase tracking-widest text-accent">

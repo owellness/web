@@ -27,9 +27,14 @@ export const buildOrganizationJsonLd = (
 ): WithContext<Organization> => ({
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": `${site.url}/#organization`,
   name: site.legalName,
   url: site.url,
-  logo: `${site.url}/logo.png`,
+  description: site.description,
+  logo: {
+    "@type": "ImageObject",
+    url: `${site.url}/logo.png`,
+  },
   sameAs: [site.social?.instagram, site.social?.youtube].filter(
     (s): s is string => Boolean(s),
   ),
@@ -38,9 +43,12 @@ export const buildOrganizationJsonLd = (
 export const buildWebSiteJsonLd = (site: SiteIdentity): WithContext<WebSite> => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": `${site.url}/#website`,
   name: site.name,
   url: site.url,
+  description: site.description,
   inLanguage: "ko-KR",
+  publisher: { "@id": `${site.url}/#organization` },
   potentialAction: {
     "@type": "SearchAction",
     target: {
