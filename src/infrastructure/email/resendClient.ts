@@ -22,4 +22,4 @@ export const resend = new Proxy({} as Resend, {
 // owns the Resend account. Set RESEND_FROM to a verified-domain address to
 // send to arbitrary recipients (required for the public newsletter).
 export const RESEND_FROM =
-  process.env.RESEND_FROM ?? "오 웰니스 <onboarding@resend.dev>";
+  process.env.RESEND_FROM ?? "오! 웰니스 <onboarding@resend.dev>";

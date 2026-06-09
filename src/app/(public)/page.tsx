@@ -5,8 +5,9 @@ import {
   buildOrganizationJsonLd,
   buildWebSiteJsonLd,
 } from "@/application/seo/jsonld";
-import { categoryService } from "@/composition";
-import { SITE_CONFIG, SITE_NAME, SITE_URL } from "@/config/site";
+import { DEFAULT_SETTINGS } from "@/application/settings/model";
+import { categoryService, settingsService } from "@/composition";
+import { SITE_CONFIG, SITE_URL } from "@/config/site";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
 
 export const revalidate = 300; // ISR every 5 min
@@ -16,7 +17,10 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const cats = await categoryService.listAll().catch(() => []);
+  const [cats, settings] = await Promise.all([
+    categoryService.listAll().catch(() => []),
+    settingsService.get().catch(() => DEFAULT_SETTINGS),
+  ]);
   const ctaSlug = cats[0]?.slug;
   return (
     <>
@@ -25,17 +29,13 @@ export default async function HomePage() {
       <section className="border-b border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-20 sm:px-6 md:py-28">
           <p className="text-sm font-medium uppercase tracking-widest text-accent">
-            Evidence-based wellness
+            {settings.heroEyebrow}
           </p>
-          <h1 className="max-w-3xl text-balance text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
-            잘 자고, 잘 먹고, 잘 움직이는 법.
-            <br className="hidden sm:block" />
-            {SITE_NAME}이 매주 정리합니다.
+          <h1 className="max-w-3xl whitespace-pre-line text-balance text-4xl font-semibold leading-tight tracking-tight text-foreground sm:text-5xl">
+            {settings.heroTitle}
           </h1>
-          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            수면, 영양, 운동, 여성 건강. 흩어진 웰니스 정보를 근거와 함께
-            한곳에서 만나보세요. 곧 출시될 오 웰니스 앱의 진단·코칭 기능을
-            가장 먼저 받아볼 수 있도록 뉴스레터를 보내드립니다.
+          <p className="max-w-2xl whitespace-pre-line text-lg leading-relaxed text-muted-foreground">
+            {settings.heroSubtitle}
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link

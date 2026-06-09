@@ -78,6 +78,14 @@ body {
 .prose-article {
   font-size: 1.0625rem;
   line-height: 1.75;
+  /* Allow long words/URLs to break so they never cause horizontal scroll. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.prose-article a {
+  /* Same for inline links specifically (older browsers ignore anywhere). */
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 .prose-article > * + * {
   margin-top: 1.1em;
@@ -154,6 +162,8 @@ body {
 .prose-tiptap {
   font-size: 1rem;
   line-height: 1.7;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .prose-tiptap > * + * {
   margin-top: 0.9em;

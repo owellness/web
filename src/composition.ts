@@ -6,6 +6,7 @@ import { createMediaService } from "@/application/media/service";
 import { createNewsletterService } from "@/application/newsletter/service";
 import { createPageService } from "@/application/pages/service";
 import { createSearchService } from "@/application/search/service";
+import { createSettingsService } from "@/application/settings/service";
 import { createTagService } from "@/application/tags/service";
 import { SITE_NAME, SITE_URL } from "@/config/site";
 
@@ -24,6 +25,7 @@ import { drizzleCampaignRepository } from "@/infrastructure/repositories/drizzle
 import { drizzleCategoryRepository } from "@/infrastructure/repositories/drizzleCategoryRepository";
 import { drizzleFaqRepository } from "@/infrastructure/repositories/drizzleFaqRepository";
 import { drizzlePageRepository } from "@/infrastructure/repositories/drizzlePageRepository";
+import { drizzleSettingsRepository } from "@/infrastructure/repositories/drizzleSettingsRepository";
 import { drizzleSubscriberRepository } from "@/infrastructure/repositories/drizzleSubscriberRepository";
 import { drizzleTagRepository } from "@/infrastructure/repositories/drizzleTagRepository";
 import { postgresFtsAdapter } from "@/infrastructure/search/postgresFtsAdapter";
@@ -55,6 +57,8 @@ export const authorService = createAuthorService({
 export const tagService = createTagService(drizzleTagRepository);
 
 export const searchService = createSearchService(postgresFtsAdapter);
+
+export const settingsService = createSettingsService(drizzleSettingsRepository);
 
 export const mediaService = createMediaService(blobMediaUploadAdapter);
 

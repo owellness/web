@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 
+import { SITE_NAME_EN } from "@/config/site";
+
 // Brand logo served at /logo.png for Organization + Article `publisher.logo`
 // JSON-LD (and social/general use). Generated via the OG runtime so we don't
 // depend on a committed binary asset. A Latin wordmark keeps glyphs reliable
@@ -59,7 +61,7 @@ export async function GET() {
               letterSpacing: "-0.02em",
             }}
           >
-            OH WELLNESS
+            {SITE_NAME_EN.toUpperCase()}
           </div>
           <div
             style={{

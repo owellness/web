@@ -43,7 +43,7 @@ export default async function NewsletterPage({
           {SITE_NAME} 뉴스레터
         </h1>
         <p className="text-base leading-relaxed text-muted-foreground">
-          한 주의 근거 기반 웰니스 인사이트와 곧 출시될 오 웰니스 앱의 진단·코칭
+          한 주의 근거 기반 웰니스 인사이트와 곧 출시될 오! 웰니스 앱의 진단·코칭
           기능 베타 초대를 가장 먼저 보내드립니다.
         </p>
       </header>

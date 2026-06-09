@@ -44,11 +44,12 @@ export function NewsletterForm({
           type="checkbox"
           name="consent"
           required
+          defaultChecked
           className="mt-1 size-4 rounded border-border accent-accent"
         />
         <span>
-          마케팅 정보 수신에 동의합니다. 언제든지 이메일 하단의 링크로 해지할 수
-          있습니다.
+          개인정보(이메일) 수집·이용에 동의합니다. 수집 목적은 뉴스레터 발송이며,
+          언제든지 이메일 하단의 링크로 해지할 수 있습니다.
         </span>
       </label>
 

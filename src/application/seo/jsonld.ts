@@ -12,6 +12,7 @@ import type {
 
 export type SiteIdentity = {
   name: string;
+  nameEn?: string;
   legalName: string;
   url: string;
   description: string;
@@ -29,6 +30,7 @@ export const buildOrganizationJsonLd = (
   "@type": "Organization",
   "@id": `${site.url}/#organization`,
   name: site.legalName,
+  alternateName: site.nameEn,
   url: site.url,
   description: site.description,
   logo: {

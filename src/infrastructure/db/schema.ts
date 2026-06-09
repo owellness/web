@@ -320,6 +320,20 @@ export const newsletterCampaigns = pgTable(
 );
 
 // ─────────────────────────────────────────────────────────────
+// Domain: site settings (single-row, admin-editable)
+// ─────────────────────────────────────────────────────────────
+
+export const siteSettings = pgTable("site_settings", {
+  // Singleton row keyed by a fixed id.
+  id: varchar("id", { length: 20 }).primaryKey().default("default"),
+  heroEyebrow: varchar("hero_eyebrow", { length: 120 }).notNull().default(""),
+  heroTitle: text("hero_title").notNull().default(""),
+  heroSubtitle: text("hero_subtitle").notNull().default(""),
+  faviconUrl: text("favicon_url"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
+});
+
+// ─────────────────────────────────────────────────────────────
 // Domain: media assets (Vercel Blob)
 // ─────────────────────────────────────────────────────────────
 
