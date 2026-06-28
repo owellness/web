@@ -50,9 +50,25 @@ export const CATEGORY_BY_SLUG: Readonly<Record<CategorySlug, CategoryDefinition>
     Record<CategorySlug, CategoryDefinition>
   >;
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
-  "http://localhost:3000";
+// Canonical site origin used by robots.txt, sitemap.xml, metadataBase,
+// canonical/OG tags and JSON-LD. Resolution order matters for SEO:
+//   1. NEXT_PUBLIC_SITE_URL          — explicit override; set this in prod.
+//   2. VERCEL_PROJECT_PRODUCTION_URL — Vercel's stable production domain
+//      (a bare host, no protocol). Safety net so a forgotten env var never
+//      ships "http://localhost:3000" into robots/sitemap/canonical — which
+//      would tell Google to index localhost and leave the real site unindexed.
+//   3. localhost                     — local development only.
+function resolveSiteUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return explicit.replace(/\/+$/, "");
+
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercel) return `https://${vercel.replace(/\/+$/, "")}`;
+
+  return "http://localhost:3000";
+}
+
+export const SITE_URL = resolveSiteUrl();
 
 export const SITE_NAME = process.env.NEXT_PUBLIC_SITE_NAME ?? "오! 웰니스";
 
