@@ -11,6 +11,9 @@ export async function GET(request: Request) {
   const title = url.searchParams.get("title") ?? SITE_NAME;
   const category = url.searchParams.get("category") ?? "wellness";
   const author = url.searchParams.get("author") ?? SITE_NAME;
+  // Optional leading emoji (e.g. OWTI type icon). Rendered via Twemoji by
+  // ImageResponse's default `emoji` option; omitted when not provided.
+  const emoji = url.searchParams.get("emoji");
 
   return new ImageResponse(
     (
@@ -60,6 +63,11 @@ export async function GET(request: Request) {
             color: "#14110f",
           }}
         >
+          {emoji ? (
+            <div style={{ display: "flex", fontSize: 104, lineHeight: 1 }}>
+              {emoji}
+            </div>
+          ) : null}
           <div
             style={{
               fontSize: 64,

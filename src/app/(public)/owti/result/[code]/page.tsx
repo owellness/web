@@ -42,7 +42,9 @@ export async function generateMetadata({
   const url = resultUrl(type.code);
   const ogImage = `${SITE_URL}/api/og?title=${encodeURIComponent(
     `${type.name} ${type.code}`,
-  )}&category=${encodeURIComponent("O! Wellness Type")}`;
+  )}&category=${encodeURIComponent(
+    "O! Wellness Type",
+  )}&emoji=${encodeURIComponent(type.emoji)}`;
 
   return {
     title,
