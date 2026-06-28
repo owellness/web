@@ -28,6 +28,7 @@ export type ArticleSummary = {
   authorName: string;
   ogImageUrl: string | null;
   readingTimeSec: number;
+  viewCount: number;
 };
 
 export type Article = ArticleSummary & {

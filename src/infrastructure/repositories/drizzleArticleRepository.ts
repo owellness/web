@@ -49,6 +49,7 @@ const mapArticle = (row: ArticleWithRelations): Article => ({
   publishedAt: row.publishedAt,
   updatedAt: row.updatedAt,
   readingTimeSec: row.readingTimeSec,
+  viewCount: row.viewCount,
   primaryCategorySlug: row.primaryCategory.slug as CategorySlug,
   authorSlug: row.author.slug,
   authorName: row.author.displayName,
@@ -76,6 +77,7 @@ const mapSummary = (
   publishedAt: row.publishedAt,
   updatedAt: row.updatedAt,
   readingTimeSec: row.readingTimeSec,
+  viewCount: row.viewCount,
   primaryCategorySlug: row.primaryCategory.slug as CategorySlug,
   authorSlug: row.author.slug,
   authorName: row.author.displayName,
@@ -165,6 +167,27 @@ export const drizzleArticleRepository: ArticleRepository = {
     return Date.now();
   },
 
+  async incrementViewCount(slug) {
+    // Mirror findBySlug's NFC/NFD-tolerant matching so percent-encoded or
+    // decomposed Hangul slugs still resolve. Scope to published rows so drafts
+    // and archived posts never accrue public views. The increment runs in the
+    // DB (view_count = view_count + 1) to stay correct under concurrent hits.
+    const decoded = decodeSlugForLookup(slug);
+    const nfc = decoded.normalize("NFC");
+    const nfd = decoded.normalize("NFD");
+    await db
+      .update(articles)
+      .set({ viewCount: sql`${articles.viewCount} + 1` })
+      .where(
+        and(
+          eq(articles.status, "published"),
+          nfc === nfd
+            ? eq(articles.slug, nfc)
+            : or(eq(articles.slug, nfc), eq(articles.slug, nfd)),
+        ),
+      );
+  },
+
   async findBySlug(slug) {
     // URL params may arrive percent-encoded and/or in NFD form. Decode +
     // NFC-normalize, then match both NFC and NFD against the stored value.
@@ -237,10 +260,14 @@ export const drizzleArticleRepository: ArticleRepository = {
     }
 
     const offset = pagination.cursor ? Number(pagination.cursor) : 0;
+    const orderBy =
+      filter.sort === "popular"
+        ? [desc(articles.viewCount), desc(articles.publishedAt)]
+        : [desc(articles.publishedAt), desc(articles.createdAt)];
     const rows = await db.query.articles.findMany({
       where: conditions.length ? and(...conditions) : undefined,
       with: { author: true, primaryCategory: true },
-      orderBy: [desc(articles.publishedAt), desc(articles.createdAt)],
+      orderBy,
       limit: pagination.limit + 1,
       offset,
     });

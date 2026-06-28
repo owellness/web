@@ -6,6 +6,11 @@ export type ArticleListFilter = {
   tagSlug?: string;
   authorSlug?: string;
   status?: "published" | "draft" | "archived" | "all";
+  /**
+   * Result ordering. Defaults to "latest" (publishedAt desc). "popular" orders
+   * by view count desc, powering the 인기 콘텐츠 ranking page.
+   */
+  sort?: "latest" | "popular";
 };
 
 export type ArticleStorageInput = ArticleInput & {
@@ -16,6 +21,12 @@ export type ArticleStorageInput = ArticleInput & {
 export interface ArticleRepository {
   /** Next sequential number used for auto-generated numeric slugs. */
   nextSlugNumber(): Promise<number>;
+  /**
+   * Atomically increments the view tally for a published article. No-op when
+   * the slug doesn't resolve to a published article. Best-effort: callers
+   * treat failures as non-fatal so view tracking never breaks page delivery.
+   */
+  incrementViewCount(slug: string): Promise<void>;
   findBySlug(slug: string): Promise<Article | null>;
   findById(id: string): Promise<Article | null>;
   listSummaries(

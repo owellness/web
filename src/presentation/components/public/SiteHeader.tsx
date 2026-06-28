@@ -31,6 +31,12 @@ export async function SiteHeader() {
         </nav>
         <div className="flex items-center gap-1 text-sm">
           <Link
+            href="/popular"
+            className="rounded-md px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          >
+            인기
+          </Link>
+          <Link
             href="/owti"
             className="rounded-md px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
           >
