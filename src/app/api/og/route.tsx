@@ -12,7 +12,10 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const title = url.searchParams.get("title") ?? SITE_NAME;
   const category = url.searchParams.get("category") ?? "wellness";
-  const author = url.searchParams.get("author") ?? SITE_NAME;
+  // Byline only renders when an explicit author distinct from the brand is
+  // given, so cards without one (e.g. OWTI) don't repeat the brand name twice.
+  const author = url.searchParams.get("author");
+  const showByline = !!author && author !== SITE_NAME;
   // Optional leading emoji (e.g. OWTI type icon). We render a bundled Twemoji
   // SVG (no runtime CDN fetch); unknown emoji fall back to the raw glyph.
   const emoji = url.searchParams.get("emoji");
@@ -68,19 +71,19 @@ export async function GET(request: Request) {
         >
           {emojiSvg ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={emojiSvg} width={104} height={104} alt="" />
+            <img src={emojiSvg} width={150} height={150} alt="" />
           ) : emoji ? (
-            <div style={{ display: "flex", fontSize: 104, lineHeight: 1 }}>
+            <div style={{ display: "flex", fontSize: 150, lineHeight: 1 }}>
               {emoji}
             </div>
           ) : null}
           <div
             style={{
-              fontSize: 64,
+              fontSize: 88,
               fontWeight: 700,
-              lineHeight: 1.15,
+              lineHeight: 1.1,
               letterSpacing: "-0.02em",
-              maxWidth: 1000,
+              maxWidth: 1040,
             }}
           >
             {title}
@@ -88,13 +91,13 @@ export async function GET(request: Request) {
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: showByline ? "space-between" : "flex-end",
               alignItems: "flex-end",
               color: "#6b6258",
-              fontSize: 22,
+              fontSize: 24,
             }}
           >
-            <span>by {author}</span>
+            {showByline ? <span>by {author}</span> : null}
             <span style={{ fontWeight: 600, color: "#14110f" }}>
               {SITE_NAME}
             </span>
