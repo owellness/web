@@ -40,9 +40,11 @@ export async function generateMetadata({
   const title = `${type.name} (${type.code}) — 웰니스 유형 검사 결과`;
   const description = `${type.tagline}. ${type.description}`;
   const url = resultUrl(type.code);
-  const ogImage = `${SITE_URL}/api/og?title=${encodeURIComponent(
-    `${type.name} ${type.code}`,
-  )}&category=${encodeURIComponent("O! Wellness Type")}`;
+  const ogImage =
+    `${SITE_URL}/api/og?title=${encodeURIComponent(type.name)}` +
+    `&code=${encodeURIComponent(type.code)}` +
+    `&category=${encodeURIComponent("O! Wellness Type")}` +
+    `&emoji=${encodeURIComponent(type.emoji)}`;
 
   return {
     title,

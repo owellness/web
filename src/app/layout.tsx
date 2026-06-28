@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 
-import { settingsService } from "@/composition";
 import { SITE_CONFIG, SITE_NAME, SITE_URL } from "@/config/site";
 import { ThemeProvider } from "@/presentation/components/ThemeProvider";
+import { getSiteSettings } from "@/presentation/lib/siteSettings";
 import "./globals.css";
 
 const pretendard = localFont({
@@ -14,11 +14,10 @@ const pretendard = localFont({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  // Admin-uploaded favicon overrides the default app/favicon.ico when set.
-  const faviconUrl = await settingsService
-    .get()
-    .then((s) => s.faviconUrl)
-    .catch(() => null);
+  // Admin-uploaded favicon / OG image override the bundled defaults when set.
+  const settings = await getSiteSettings();
+  const faviconUrl = settings?.faviconUrl ?? null;
+  const ogImage = settings?.ogImageUrl ?? SITE_CONFIG.defaultOgImage;
 
   return {
     metadataBase: new URL(SITE_URL),
@@ -40,7 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: SITE_NAME,
       title: `${SITE_NAME} | 근거 기반 웰니스 콘텐츠`,
       description: SITE_CONFIG.description,
-      images: [SITE_CONFIG.defaultOgImage],
+      images: [ogImage],
     },
     twitter: {
       card: "summary_large_image",

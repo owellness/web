@@ -15,6 +15,7 @@ import { ArticleViewTracker } from "@/presentation/components/public/ArticleView
 import { JsonLd } from "@/presentation/components/public/JsonLd";
 import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDisclaimer";
 import { NewsletterCTA } from "@/presentation/components/public/NewsletterCTA";
+import { resolveDefaultOgImage } from "@/presentation/lib/siteSettings";
 
 import { articleService, categoryService } from "@/composition";
 
@@ -61,7 +62,8 @@ export async function generateMetadata({
       blankToNull(article.excerpt) ??
       SITE_CONFIG.description;
     const url = `${SITE_URL}/${article.primaryCategorySlug}/${article.slug}`;
-    const ogImage = article.ogImageUrl ?? SITE_CONFIG.defaultOgImage;
+    // Per-article image wins; otherwise the admin-set (or bundled) site default.
+    const ogImage = article.ogImageUrl ?? (await resolveDefaultOgImage());
     return {
       title,
       description: metaDescription,

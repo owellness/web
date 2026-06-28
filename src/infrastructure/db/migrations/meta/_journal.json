@@ -43,6 +43,13 @@
       "when": 1782651378908,
       "tag": "0005_motionless_iceman",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782652684549,
+      "tag": "0006_freezing_fallen_one",
+      "breakpoints": true
     }
   ]
 }

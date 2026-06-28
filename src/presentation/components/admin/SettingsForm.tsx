@@ -20,6 +20,9 @@ export function SettingsForm({
   const [faviconUrl, setFaviconUrl] = useState(initial.faviconUrl ?? "");
   const [faviconUploading, setFaviconUploading] = useState(false);
   const faviconInputRef = useRef<HTMLInputElement>(null);
+  const [ogImageUrl, setOgImageUrl] = useState(initial.ogImageUrl ?? "");
+  const [ogUploading, setOgUploading] = useState(false);
+  const ogInputRef = useRef<HTMLInputElement>(null);
 
   const handleFavicon = (file: File | undefined) => {
     if (!file) return;
@@ -39,6 +42,24 @@ export function SettingsForm({
       });
   };
 
+  const handleOgImage = (file: File | undefined) => {
+    if (!file) return;
+    setMessage(null);
+    setOgUploading(true);
+    uploadImage(file)
+      .then(({ url }) => setOgImageUrl(url))
+      .catch((e) =>
+        setMessage({
+          type: "error",
+          text: e instanceof Error ? e.message : "업로드 실패",
+        }),
+      )
+      .finally(() => {
+        setOgUploading(false);
+        if (ogInputRef.current) ogInputRef.current.value = "";
+      });
+  };
+
   return (
     <form
       className="max-w-2xl space-y-6"
@@ -46,6 +67,7 @@ export function SettingsForm({
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
         fd.set("faviconUrl", faviconUrl);
+        fd.set("ogImageUrl", ogImageUrl);
         startTransition(async () => {
           const res = await action(fd);
           setMessage(
@@ -139,6 +161,55 @@ export function SettingsForm({
         />
       </fieldset>
 
+      <fieldset className="space-y-3 rounded-2xl border border-border bg-card p-5">
+        <legend className="px-1 text-sm font-medium text-foreground">
+          OG 이미지
+        </legend>
+        <p className="text-xs text-muted-foreground">
+          카카오톡·페이스북 등에 링크를 공유할 때 표시되는 대표 이미지입니다.
+          1200×630 PNG·JPG(권장)를 올려 주세요. 비워 두면 기본 이미지가
+          사용됩니다.
+        </p>
+        <div className="flex items-center gap-3">
+          {ogImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={ogImageUrl}
+              alt="OG 이미지 미리보기"
+              className="aspect-[1200/630] w-40 rounded-md border border-border object-cover bg-background"
+            />
+          ) : (
+            <div className="flex aspect-[1200/630] w-40 items-center justify-center rounded-md border border-dashed border-border text-xs text-muted-foreground">
+              없음
+            </div>
+          )}
+          <button
+            type="button"
+            disabled={ogUploading}
+            onClick={() => ogInputRef.current?.click()}
+            className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-muted disabled:opacity-50"
+          >
+            {ogUploading ? "업로드 중…" : "이미지 업로드"}
+          </button>
+          {ogImageUrl ? (
+            <button
+              type="button"
+              onClick={() => setOgImageUrl("")}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              제거
+            </button>
+          ) : null}
+        </div>
+        <input
+          ref={ogInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          hidden
+          onChange={(e) => handleOgImage(e.target.files?.[0])}
+        />
+      </fieldset>
+
       {message ? (
         <p
           className={`rounded-md px-3 py-2 text-sm ${
@@ -153,7 +224,7 @@ export function SettingsForm({
 
       <button
         type="submit"
-        disabled={pending || faviconUploading}
+        disabled={pending || faviconUploading || ogUploading}
         className="rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-50"
       >
         {pending ? "저장 중…" : "저장"}

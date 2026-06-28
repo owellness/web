@@ -3,8 +3,9 @@ import Link from "next/link";
 
 import { buildBreadcrumbJsonLd } from "@/application/seo/jsonld";
 import { articleService } from "@/composition";
-import { SITE_CONFIG, SITE_NAME, SITE_URL } from "@/config/site";
+import { SITE_NAME, SITE_URL } from "@/config/site";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
+import { resolveDefaultOgImage } from "@/presentation/lib/siteSettings";
 
 // Refresh the ranking roughly once a minute. View counts climb continuously,
 // so we trade a little staleness for cache efficiency rather than rendering
@@ -18,19 +19,21 @@ const PAGE_DESCRIPTION =
 const formatReadingTime = (sec: number): string =>
   `${Math.max(1, Math.round(sec / 60))}분 읽기`;
 
-export const metadata: Metadata = {
-  title: PAGE_TITLE,
-  description: PAGE_DESCRIPTION,
-  alternates: { canonical: `${SITE_URL}/popular` },
-  openGraph: {
-    title: `${PAGE_TITLE} | ${SITE_NAME}`,
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: PAGE_TITLE,
     description: PAGE_DESCRIPTION,
-    url: `${SITE_URL}/popular`,
-    type: "website",
-    siteName: SITE_NAME,
-    images: [SITE_CONFIG.defaultOgImage],
-  },
-};
+    alternates: { canonical: `${SITE_URL}/popular` },
+    openGraph: {
+      title: `${PAGE_TITLE} | ${SITE_NAME}`,
+      description: PAGE_DESCRIPTION,
+      url: `${SITE_URL}/popular`,
+      type: "website",
+      siteName: SITE_NAME,
+      images: [await resolveDefaultOgImage()],
+    },
+  };
+}
 
 export default async function PopularPage() {
   // Resilient to DB unavailability during build (placeholder URL) — the first

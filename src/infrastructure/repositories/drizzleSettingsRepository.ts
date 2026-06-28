@@ -15,6 +15,7 @@ const map = (row: Row): SiteSettings => ({
   heroTitle: row.heroTitle,
   heroSubtitle: row.heroSubtitle,
   faviconUrl: row.faviconUrl,
+  ogImageUrl: row.ogImageUrl,
 });
 
 export const drizzleSettingsRepository: SettingsRepository = {
@@ -36,6 +37,7 @@ export const drizzleSettingsRepository: SettingsRepository = {
         heroTitle: input.heroTitle,
         heroSubtitle: input.heroSubtitle,
         faviconUrl: input.faviconUrl,
+        ogImageUrl: input.ogImageUrl,
         updatedAt: sql`now()`,
       })
       .onConflictDoUpdate({
@@ -45,6 +47,7 @@ export const drizzleSettingsRepository: SettingsRepository = {
           heroTitle: input.heroTitle,
           heroSubtitle: input.heroSubtitle,
           faviconUrl: input.faviconUrl,
+          ogImageUrl: input.ogImageUrl,
           updatedAt: sql`now()`,
         },
       })

@@ -18,6 +18,7 @@ const withDefaults = (s: SiteSettings | null): SiteSettings => ({
     ? s.heroSubtitle
     : DEFAULT_SETTINGS.heroSubtitle,
   faviconUrl: s?.faviconUrl ?? null,
+  ogImageUrl: s?.ogImageUrl ?? null,
 });
 
 export const createSettingsService = (repo: SettingsRepository) => ({
@@ -41,6 +42,7 @@ export const createSettingsService = (repo: SettingsRepository) => ({
       heroTitle: parsed.data.heroTitle,
       heroSubtitle: parsed.data.heroSubtitle,
       faviconUrl: parsed.data.faviconUrl ?? null,
+      ogImageUrl: parsed.data.ogImageUrl ?? null,
     });
   },
 });
