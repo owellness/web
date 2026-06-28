@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import {
   decodeAverages,
+  RESULT_STORAGE_KEY,
   SCALE_MAX,
   scoresFromAverages,
   STRONG_THRESHOLD,
@@ -14,29 +15,52 @@ import {
 // Threshold marker position as a % of the bar width (3.5 / 5 = 70%).
 const THRESHOLD_PCT = (STRONG_THRESHOLD / SCALE_MAX) * 100;
 
-const subscribeHash = (cb: () => void) => {
-  window.addEventListener("hashchange", cb);
-  return () => window.removeEventListener("hashchange", cb);
-};
+const noopSubscribe = () => () => {};
 
-// Read the URL hash via useSyncExternalStore so the value is hydration-safe
-// (server snapshot is "") without seeding state inside an effect. Personal
-// scores live in the hash, which never reaches the server, keeping this page
-// fully static/cacheable.
-function useLocationHash(): string {
+// false during SSR + the first hydration render, true thereafter — so the
+// browser-only read below never runs on the server and never causes a
+// hydration mismatch. Avoids seeding state inside an effect.
+function useMounted(): boolean {
   return useSyncExternalStore(
-    subscribeHash,
-    () => window.location.hash,
-    () => "",
+    noopSubscribe,
+    () => true,
+    () => false,
   );
 }
 
-export function OwtiScoreBreakdown() {
-  const hash = useLocationHash();
+/**
+ * Resolve the four domain averages for THIS result page. Tries, in order:
+ *  1. the URL hash (works for shared/bookmarked links on a full page load), and
+ *  2. sessionStorage written by the quiz on finish — reliable right after the
+ *     quiz, because a client-side router.push() may not have applied the hash
+ *     by the time this component first reads it.
+ * The stored value is keyed by code so one person's result never shows up on a
+ * different type's shared page.
+ */
+function readAverages(code: string): number[] | null {
+  const fromHash = decodeAverages(window.location.hash);
+  if (fromHash) return fromHash;
+  try {
+    const raw = sessionStorage.getItem(RESULT_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as { code?: string; averages?: string };
+      if (parsed?.code === code && typeof parsed.averages === "string") {
+        return decodeAverages(parsed.averages);
+      }
+    }
+  } catch {
+    /* ignore unavailable/corrupt storage */
+  }
+  return null;
+}
+
+export function OwtiScoreBreakdown({ code }: { code: string }) {
+  const mounted = useMounted();
   const scores = useMemo(() => {
-    const averages = decodeAverages(hash);
+    if (!mounted) return null; // matches the server-rendered prompt below
+    const averages = readAverages(code);
     return averages ? scoresFromAverages(averages) : null;
-  }, [hash]);
+  }, [mounted, code]);
 
   if (!scores) {
     return (

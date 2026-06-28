@@ -9,6 +9,7 @@ import {
   encodeAverages,
   LIKERT_OPTIONS,
   questionsForDomain,
+  RESULT_STORAGE_KEY,
   TOTAL_QUESTIONS,
 } from "@/application/owti";
 
@@ -101,14 +102,20 @@ export function OwtiQuiz() {
     setSubmitting(true);
     try {
       const result = computeResult(answers);
+      const encoded = encodeAverages(result.scores);
       try {
         sessionStorage.removeItem(STORAGE_KEY);
+        // Reliable hand-off to the result page (the URL hash alone can be lost
+        // across a client-side navigation). Keyed by code so it can't be
+        // mistaken for someone else's result on a different type page.
+        sessionStorage.setItem(
+          RESULT_STORAGE_KEY,
+          JSON.stringify({ code: result.code, averages: encoded }),
+        );
       } catch {
-        /* ignore */
+        /* storage disabled — the hash below still covers most cases */
       }
-      router.push(
-        `/owti/result/${result.code}#${encodeAverages(result.scores)}`,
-      );
+      router.push(`/owti/result/${result.code}#${encoded}`);
     } catch {
       setSubmitting(false);
       setShowIncomplete(true);

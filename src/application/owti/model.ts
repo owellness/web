@@ -18,6 +18,11 @@ export const SCALE_MAX = 5;
 export const QUESTIONS_PER_DOMAIN = 12;
 export const TOTAL_QUESTIONS = 48;
 
+/** sessionStorage key for the just-computed result, handed from the quiz to the
+ * result page. This is a reliable backup to the URL hash, which a client-side
+ * router.push() does not always apply before the result page reads it. */
+export const RESULT_STORAGE_KEY = "owti-result-v1";
+
 /**
  * Domain average ≥ 3.5 → strong code, otherwise → weak code.
  * (The source material phrases it as "3.5 이상 → 강점 / 3.4 이하 → 취약"; 3.5 is
