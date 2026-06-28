@@ -42,6 +42,7 @@ CREATE TABLE "articles" (
 	"seo_description" varchar(300),
 	"canonical_url" text,
 	"reading_time_sec" integer DEFAULT 0 NOT NULL,
+	"view_count" integer DEFAULT 0 NOT NULL,
 	"search_text" text DEFAULT '' NOT NULL,
 	CONSTRAINT "articles_slug_unique" UNIQUE("slug")
 );
@@ -199,6 +200,7 @@ CREATE INDEX "article_tags_tag_idx" ON "article_tags" USING btree ("tag_id");
 CREATE INDEX "articles_status_published_at_idx" ON "articles" USING btree ("status","published_at" DESC NULLS LAST);
 CREATE INDEX "articles_primary_category_idx" ON "articles" USING btree ("primary_category_id","published_at" DESC NULLS LAST);
 CREATE INDEX "articles_author_idx" ON "articles" USING btree ("author_id","published_at" DESC NULLS LAST);
+CREATE INDEX "articles_status_view_count_idx" ON "articles" USING btree ("status","view_count" DESC NULLS LAST);
 CREATE UNIQUE INDEX "authors_user_id_uidx" ON "authors" USING btree ("user_id");
 CREATE INDEX "faq_items_article_idx" ON "faq_items" USING btree ("article_id","position");
 CREATE INDEX "faq_items_category_idx" ON "faq_items" USING btree ("category_id","position");

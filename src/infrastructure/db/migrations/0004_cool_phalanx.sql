@@ -1,0 +1,2 @@
+ALTER TABLE "articles" ADD COLUMN "view_count" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+CREATE INDEX "articles_status_view_count_idx" ON "articles" USING btree ("status","view_count" DESC NULLS LAST);

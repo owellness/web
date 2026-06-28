@@ -10,7 +10,6 @@ export default async function HomePage() {
     categoryService.listAll().catch(() => []),
     settingsService.get().catch(() => DEFAULT_SETTINGS),
   ]);
-  const ctaSlug = cats[0]?.slug;
   return (
     <>
       <section className="border-b border-border">
@@ -31,14 +30,12 @@ export default async function HomePage() {
             >
               뉴스레터 구독하기
             </Link>
-            {ctaSlug ? (
-              <Link
-                href={`/${ctaSlug}`}
-                className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
-              >
-                인기 콘텐츠 보기
-              </Link>
-            ) : null}
+            <Link
+              href="/popular"
+              className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition hover:bg-muted"
+            >
+              인기 콘텐츠 보기
+            </Link>
           </div>
         </div>
       </section>

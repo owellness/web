@@ -11,6 +11,7 @@ import {
   buildFaqJsonLd,
 } from "@/application/seo/jsonld";
 import { SITE_CONFIG, SITE_NAME, SITE_URL } from "@/config/site";
+import { ArticleViewTracker } from "@/presentation/components/public/ArticleViewTracker";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
 import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDisclaimer";
 import { NewsletterCTA } from "@/presentation/components/public/NewsletterCTA";
@@ -162,6 +163,7 @@ export default async function ArticlePage({
 
   return (
     <>
+      <ArticleViewTracker slug={article.slug} />
       <JsonLd schema={articleSchema} />
       <JsonLd schema={breadcrumb} />
       {faqSchema ? <JsonLd schema={faqSchema} /> : null}

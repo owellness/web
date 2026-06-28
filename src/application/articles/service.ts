@@ -41,6 +41,24 @@ export const createArticleService = ({
     return repository.listSummaries(filter, pagination);
   },
 
+  /** Lists published articles ranked by view count, for the 인기 콘텐츠 page. */
+  async listPopular(limit = 24): Promise<ArticleSummary[]> {
+    const { items } = await repository.listSummaries(
+      { status: "published", sort: "popular" },
+      { limit },
+    );
+    return items;
+  },
+
+  /**
+   * Records a single page view for a published article. Best-effort by design:
+   * tracking is fire-and-forget from the client, so a missing/unpublished slug
+   * or a transient DB hiccup must never throw back to the caller.
+   */
+  async recordView(slug: string): Promise<void> {
+    await repository.incrementViewCount(slug);
+  },
+
   async listForSitemap() {
     return repository.listAllPublishedForSitemap();
   },

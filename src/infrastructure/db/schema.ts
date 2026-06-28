@@ -159,6 +159,9 @@ export const articles = pgTable(
     seoDescription: varchar("seo_description", { length: 300 }),
     canonicalUrl: text("canonical_url"),
     readingTimeSec: integer("reading_time_sec").notNull().default(0),
+    // Running tally of page views, incremented on each published-article visit
+    // via POST /api/articles/[slug]/view. Powers the "인기 콘텐츠" ranking.
+    viewCount: integer("view_count").notNull().default(0),
     // Postgres tsvector populated by trigger or generated column at migration time.
     // Stored as text here; the FTS index is created via raw SQL in a migration.
     searchText: text("search_text").notNull().default(""),
@@ -167,6 +170,8 @@ export const articles = pgTable(
     index("articles_status_published_at_idx").on(t.status, t.publishedAt.desc()),
     index("articles_primary_category_idx").on(t.primaryCategoryId, t.publishedAt.desc()),
     index("articles_author_idx").on(t.authorId, t.publishedAt.desc()),
+    // Supports the popular ranking: published articles ordered by views desc.
+    index("articles_status_view_count_idx").on(t.status, t.viewCount.desc()),
   ],
 );
 
