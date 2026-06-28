@@ -16,7 +16,13 @@ const pretendard = localFont({
 export async function generateMetadata(): Promise<Metadata> {
   // Admin-uploaded favicon / OG image override the bundled defaults when set.
   const settings = await getSiteSettings();
-  const faviconUrl = settings?.faviconUrl ?? null;
+  // The default favicon lives in `public/favicon.ico`, NOT `app/`: an icon file
+  // under `app/` is auto-detected by Next.js and emitted as its own
+  // `<link rel="icon" sizes="any">`, which browsers prefer over this config-set
+  // link — so the admin-uploaded favicon would never apply. Emitting the icon
+  // here (admin URL when set, else the bundled default) keeps a single
+  // authoritative favicon link that always reflects the admin setting.
+  const faviconUrl = settings?.faviconUrl ?? "/favicon.ico";
   const ogImage = settings?.ogImageUrl ?? SITE_CONFIG.defaultOgImage;
 
   return {
@@ -31,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
       { name: SITE_CONFIG.authorOrg.name, url: SITE_CONFIG.authorOrg.url },
     ],
     category: "health",
-    icons: faviconUrl ? { icon: faviconUrl, shortcut: faviconUrl } : undefined,
+    icons: { icon: faviconUrl, shortcut: faviconUrl },
     openGraph: {
       type: "website",
       locale: SITE_CONFIG.locale,
