@@ -32,6 +32,11 @@ export async function SiteFooter() {
           <p className="text-sm font-semibold text-foreground">안내</p>
           <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
             <li>
+              <Link href="/owti" className="hover:text-foreground">
+                웰니스 유형 검사
+              </Link>
+            </li>
+            <li>
               <Link href="/about" className="hover:text-foreground">
                 소개
               </Link>

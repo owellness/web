@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { ALL_CODES } from "@/application/owti";
 import { articleService, categoryService, tagService } from "@/composition";
 import { SITE_URL } from "@/config/site";
 
@@ -40,6 +41,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    {
+      url: `${SITE_URL}/owti`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    ...ALL_CODES.map((code) => ({
+      url: `${SITE_URL}/owti/result/${code}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
     ...cats.map((cat) => ({
       url: `${SITE_URL}/${cat.slug}`,
       lastModified: now,
