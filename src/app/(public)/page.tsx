@@ -63,7 +63,7 @@ export default async function HomePage() {
                 무료로 검사 시작하기
               </Link>
               <span className="text-xs text-muted-foreground">
-                약 12~15분 · 회원가입 불필요
+                약 1~3분 · 회원가입 불필요
               </span>
             </div>
           </div>
