@@ -49,6 +49,11 @@ export default async function AdminDashboardPage() {
             desc: "OWTI 검사 첫 접속·단계별 이탈·완료·유형 분포.",
           },
           {
+            href: "/admin/profile",
+            title: "프로필",
+            desc: "저자 페이지에 보이는 이름·사진·소개·소셜 링크 수정.",
+          },
+          {
             href: "/admin/settings",
             title: "사이트 설정",
             desc: "홈 화면 소개 문구와 파비콘 수정.",

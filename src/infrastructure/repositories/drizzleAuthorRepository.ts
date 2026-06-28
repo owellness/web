@@ -84,4 +84,24 @@ export const drizzleAuthorRepository: AuthorRepository = {
       .returning();
     return mapAuthor(row);
   },
+
+  async update(id, input) {
+    const [row] = await db
+      .update(authors)
+      .set({
+        slug: input.slug,
+        displayName: input.displayName,
+        bio: input.bio,
+        avatarUrl: input.avatarUrl,
+        credentials: input.credentials,
+        affiliation: input.affiliation,
+        websiteUrl: input.websiteUrl,
+        socialJson: input.social,
+        updatedAt: sql`now()`,
+      })
+      .where(eq(authors.id, id))
+      .returning();
+    if (!row) throw new Error(`Author(${id}) not found`);
+    return mapAuthor(row);
+  },
 };
