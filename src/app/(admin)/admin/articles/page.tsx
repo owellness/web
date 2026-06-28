@@ -11,6 +11,11 @@ const STATUS_LABEL: Record<string, string> = {
 const formatDate = (d: Date | null) =>
   d ? new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium" }).format(d) : "—";
 
+// Admins want exact counts, so use grouped full numbers (e.g. 12,345) rather
+// than the compact notation shown to readers on the public 인기 page.
+const numberFormat = new Intl.NumberFormat("ko-KR");
+const formatViews = (n: number) => numberFormat.format(n);
+
 export default async function AdminArticlesPage() {
   const { items } = await articleService.list(
     { status: "all" },
@@ -46,6 +51,7 @@ export default async function AdminArticlesPage() {
                 <th className="px-4 py-3 font-medium">제목</th>
                 <th className="px-4 py-3 font-medium">카테고리</th>
                 <th className="px-4 py-3 font-medium">상태</th>
+                <th className="px-4 py-3 text-right font-medium">조회수</th>
                 <th className="px-4 py-3 font-medium">업데이트</th>
               </tr>
             </thead>
@@ -76,6 +82,9 @@ export default async function AdminArticlesPage() {
                     >
                       {STATUS_LABEL[a.status] ?? a.status}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                    {formatViews(a.viewCount)}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {formatDate(a.updatedAt)}
