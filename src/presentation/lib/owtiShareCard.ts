@@ -18,10 +18,8 @@ export type OwtiCardDomain = {
   /** Resolved single-letter code, e.g. "A" / "P". */
   letter: string;
   isStrong: boolean;
-  /** Resolved pole name, e.g. "Active" / "Passive". */
-  poleName: string;
-  /** Personal average (1–5), or null when the visitor hasn't taken the test. */
-  average: number | null;
+  /** Personal average (1–5). The card is only rendered once scores exist. */
+  average: number;
 };
 
 export type OwtiCardData = {
@@ -31,13 +29,12 @@ export type OwtiCardData = {
   tagline: string;
   /** Four domains in code order (Action → Fitness → Calm → Heart). */
   domains: OwtiCardDomain[];
-  /** True when personal per-domain scores are available. */
-  hasScores: boolean;
   /** Brand name for the footer, e.g. "오! 웰니스". */
   siteName: string;
-  /** Host shown in the footer, e.g. "owellness.kr" (may be empty). */
-  siteHost: string;
 };
+
+/** Fixed brand domain shown on the card's footer (not the deploy host). */
+const BRAND_DOMAIN = "owellness.co.kr";
 
 const COLORS = {
   bgTop: "#fcfbf8",
@@ -237,109 +234,56 @@ export async function drawOwtiShareCard(
   const contentR = W - MARGIN;
   const barW = contentR - contentL;
 
-  if (data.hasScores) {
-    font(700, 26);
-    ctx.fillStyle = COLORS.muted;
-    ctx.textAlign = "center";
-    ctx.fillText("나의 영역별 점수", cx, y);
-    y += 54;
+  font(700, 26);
+  ctx.fillStyle = COLORS.muted;
+  ctx.textAlign = "center";
+  ctx.fillText("나의 영역별 점수", cx, y);
+  y += 54;
 
-    const rowH = 92;
-    data.domains.forEach((d) => {
-      const avg = d.average ?? 0;
-      const pct = Math.max(0, Math.min(1, avg / SCALE_MAX));
-      const color = d.isStrong ? COLORS.strong : COLORS.weak;
+  const rowH = 92;
+  data.domains.forEach((d) => {
+    const pct = Math.max(0, Math.min(1, d.average / SCALE_MAX));
+    const color = d.isStrong ? COLORS.strong : COLORS.weak;
 
-      ctx.textBaseline = "middle";
+    ctx.textBaseline = "middle";
 
-      // Strength dot + domain name (left).
-      ctx.beginPath();
-      ctx.arc(contentL + 7, y, 7, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.textAlign = "left";
-      font(700, 30);
-      ctx.fillStyle = COLORS.ink;
-      ctx.fillText(d.name, contentL + 28, y);
+    // Strength dot + domain name (left).
+    ctx.beginPath();
+    ctx.arc(contentL + 7, y, 7, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.textAlign = "left";
+    font(700, 30);
+    ctx.fillStyle = COLORS.ink;
+    ctx.fillText(d.name, contentL + 28, y);
 
-      // Score (right).
-      ctx.textAlign = "right";
-      font(500, 24);
-      ctx.fillStyle = COLORS.faint;
-      ctx.fillText("/ 5", contentR, y);
-      font(700, 30);
-      ctx.fillStyle = color;
-      ctx.fillText(avg.toFixed(1), contentR - 48, y);
-
-      // Bar with a 3.5 threshold tick.
-      const barY = y + 28;
-      roundRectPath(ctx, contentL, barY, barW, 16, 8);
-      ctx.fillStyle = COLORS.track;
-      ctx.fill();
-      roundRectPath(ctx, contentL, barY, Math.max(16, barW * pct), 16, 8);
-      ctx.fillStyle = color;
-      ctx.fill();
-      const tickX = contentL + barW * (STRONG_THRESHOLD / SCALE_MAX);
-      ctx.strokeStyle = "rgba(20, 17, 15, 0.28)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(tickX, barY - 4);
-      ctx.lineTo(tickX, barY + 20);
-      ctx.stroke();
-
-      y += rowH;
-    });
-  } else {
-    // No personal scores — show the strong/weak composition from the code.
-    font(700, 26);
-    ctx.fillStyle = COLORS.muted;
-    ctx.textAlign = "center";
-    ctx.fillText("나의 웰니스 구성", cx, y);
-    y += 54;
-
-    const rowH = 84;
-    data.domains.forEach((d) => {
-      const color = d.isStrong ? COLORS.strong : COLORS.weak;
-      ctx.textBaseline = "middle";
-
-      ctx.beginPath();
-      ctx.arc(contentL + 7, y, 7, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.textAlign = "left";
-      font(700, 30);
-      ctx.fillStyle = COLORS.ink;
-      ctx.fillText(d.name, contentL + 28, y);
-
-      ctx.textAlign = "right";
-      font(700, 26);
-      ctx.fillStyle = color;
-      ctx.fillText(`${d.isStrong ? "강점" : "취약"} · ${d.poleName}`, contentR, y);
-
-      ctx.strokeStyle = COLORS.line;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(contentL, y + 30);
-      ctx.lineTo(contentR, y + 30);
-      ctx.stroke();
-
-      y += rowH;
-    });
-
-    y += 10;
+    // Score (right).
+    ctx.textAlign = "right";
     font(500, 24);
     ctx.fillStyle = COLORS.faint;
-    ctx.textAlign = "center";
-    for (const ln of wrapText(
-      ctx,
-      "48문항 검사를 완료하면 영역별 점수가 카드에 함께 담겨요.",
-      860,
-      2,
-    )) {
-      ctx.fillText(ln, cx, y);
-      y += 32;
-    }
-  }
+    ctx.fillText("/ 5", contentR, y);
+    font(700, 30);
+    ctx.fillStyle = color;
+    ctx.fillText(d.average.toFixed(1), contentR - 48, y);
+
+    // Bar with a 3.5 threshold tick.
+    const barY = y + 28;
+    roundRectPath(ctx, contentL, barY, barW, 16, 8);
+    ctx.fillStyle = COLORS.track;
+    ctx.fill();
+    roundRectPath(ctx, contentL, barY, Math.max(16, barW * pct), 16, 8);
+    ctx.fillStyle = color;
+    ctx.fill();
+    const tickX = contentL + barW * (STRONG_THRESHOLD / SCALE_MAX);
+    ctx.strokeStyle = "rgba(20, 17, 15, 0.28)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(tickX, barY - 4);
+    ctx.lineTo(tickX, barY + 20);
+    ctx.stroke();
+
+    y += rowH;
+  });
 
   // Footer.
   const footerLineY = H - 132;
@@ -357,13 +301,7 @@ export async function drawOwtiShareCard(
   ctx.fillText(data.siteName, cx, footerLineY + 44);
   font(500, 23);
   ctx.fillStyle = COLORS.muted;
-  ctx.fillText(
-    data.siteHost
-      ? `${data.siteHost} · 나의 웰니스 유형 검사`
-      : "나의 웰니스 유형 검사",
-    cx,
-    footerLineY + 82,
-  );
+  ctx.fillText(`${BRAND_DOMAIN} · 나의 웰니스 유형 검사`, cx, footerLineY + 82);
 }
 
 /** Encode the current canvas contents as a PNG Blob. */

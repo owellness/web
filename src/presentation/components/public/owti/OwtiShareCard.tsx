@@ -43,17 +43,21 @@ export function OwtiShareCard({ code }: { code: string }) {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
+  // The card is for someone who just took the test, so it renders only when
+  // personal scores exist (URL hash / sessionStorage hand-off). Visiting a type
+  // page directly — e.g. via "다른 유형 보기" or a shared link — shows nothing.
   const data = useMemo<OwtiCardData | null>(() => {
     const type = TYPE_BY_CODE[code];
     if (!type) return null;
 
     const averages = mounted ? readResultAverages(code) : null;
+    if (!averages) return null;
+
     const domains = parseCode(code).map((p, i) => ({
       name: p.domain.name,
       letter: p.letter,
       isStrong: p.isStrong,
-      poleName: p.isStrong ? p.domain.strong.name : p.domain.weak.name,
-      average: averages ? (averages[i] ?? null) : null,
+      average: averages[i] ?? 0,
     }));
 
     return {
@@ -62,9 +66,7 @@ export function OwtiShareCard({ code }: { code: string }) {
       name: type.name,
       tagline: type.tagline,
       domains,
-      hasScores: Boolean(averages),
       siteName: SITE_NAME,
-      siteHost: mounted ? window.location.host : "",
     };
   }, [code, mounted]);
 
@@ -125,7 +127,7 @@ export function OwtiShareCard({ code }: { code: string }) {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    setNotice("이미지를 저장했어요. 인스타그램 피드·스토리에 공유해보세요!");
+    setNotice("이미지를 저장했어요. 인스타그램·카카오톡에 공유해 보세요!");
   };
 
   const handleShare = async () => {
@@ -175,8 +177,8 @@ export function OwtiShareCard({ code }: { code: string }) {
         내 웰니스 유형 카드
       </h2>
       <p className="mx-auto mt-1.5 max-w-md text-sm leading-relaxed text-muted-foreground">
-        인스타그램 피드 크기(1080×1350)로 만든 결과 카드예요. 저장하거나 바로
-        공유해 나의 웰니스 유형을 자랑해보세요.
+        인스타그램 사이즈로 만든 나의 웰니스 유형 카드에요. 이미지를 저장하거나
+        바로 공유해 보세요.
       </p>
 
       {/* Preview — the exact image that gets downloaded/shared. */}

@@ -176,7 +176,8 @@ export default async function OwtiResultPage({
           <ResultList title="핵심 웰니스 팁" icon="💡" items={type.tips} tone="accent" />
         </div>
 
-        {/* Downloadable / shareable Instagram-feed card (client; reads personal
+        {/* Downloadable / shareable Instagram-feed card. Client component that
+            renders only after the visitor completes the test (it reads personal
             scores from the URL hash or the quiz's sessionStorage hand-off). */}
         <OwtiShareCard code={code} />
 
