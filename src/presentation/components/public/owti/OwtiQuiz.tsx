@@ -12,8 +12,10 @@ import {
   RESULT_STORAGE_KEY,
   TOTAL_QUESTIONS,
 } from "@/application/owti";
+import { trackOwtiEvent } from "@/presentation/lib/owtiTracking";
 
 const STORAGE_KEY = "owti-answers-v1";
+const STARTED_KEY = "owti-started";
 
 type AnswerMap = Record<number, number>;
 
@@ -61,6 +63,23 @@ export function OwtiQuiz() {
   // restored selections appear on the post-hydration re-render.
   const view = hydrated ? answers : EMPTY;
 
+  // Funnel: record "started the assessment" once per browser session.
+  const startedRef = useRef(false);
+  // Dedup advance beacons if the user steps back and forth.
+  const sentStepsRef = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    try {
+      if (sessionStorage.getItem(STARTED_KEY)) return;
+      sessionStorage.setItem(STARTED_KEY, "1");
+    } catch {
+      /* storage disabled — still record the start once for this mount */
+    }
+    trackOwtiEvent({ type: "start" });
+  }, []);
+
   // Persist on change (no setState → not an effect-setState violation).
   useEffect(() => {
     try {
@@ -103,6 +122,7 @@ export function OwtiQuiz() {
     try {
       const result = computeResult(answers);
       const encoded = encodeAverages(result.scores);
+      trackOwtiEvent({ type: "complete", code: result.code });
       try {
         sessionStorage.removeItem(STORAGE_KEY);
         // Reliable hand-off to the result page (the URL hash alone can be lost
@@ -130,6 +150,12 @@ export function OwtiQuiz() {
     if (isLast) {
       finish();
       return;
+    }
+    // Funnel: record finishing this domain step (1-based), once each.
+    const finishedStep = step + 1;
+    if (!sentStepsRef.current.has(finishedStep)) {
+      sentStepsRef.current.add(finishedStep);
+      trackOwtiEvent({ type: "advance", step: finishedStep });
     }
     setStep((s) => s + 1);
     scrollToTop();

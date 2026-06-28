@@ -56,6 +56,12 @@ export default function AdminLayout({
               발송
             </Link>
             <Link
+              href="/admin/owti"
+              className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
+            >
+              검사 통계
+            </Link>
+            <Link
               href="/admin/settings"
               className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
             >
