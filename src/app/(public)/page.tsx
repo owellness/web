@@ -43,6 +43,36 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-6xl px-4 pt-16 sm:px-6">
+        <div className="overflow-hidden rounded-3xl border border-accent/30 bg-accent/5">
+          <div className="flex flex-col gap-6 p-8 sm:p-10 md:flex-row md:items-center md:justify-between">
+            <div className="max-w-xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
+                O! Wellness Type Indicator
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+                나의 웰니스 유형은?
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                실천 · 몸 · 마음 · 연결 4개 영역, 48문항으로 알아보는 나의 웰니스
+                유형. 16가지 타입 중 지금 나에게 필요한 변화의 방향을 찾아보세요.
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-start gap-2">
+              <Link
+                href="/owti"
+                className="rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background transition hover:opacity-90"
+              >
+                무료로 검사 시작하기
+              </Link>
+              <span className="text-xs text-muted-foreground">
+                약 12~15분 · 회원가입 불필요
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
           카테고리

@@ -31,6 +31,12 @@ export async function SiteHeader() {
         </nav>
         <div className="flex items-center gap-1 text-sm">
           <Link
+            href="/owti"
+            className="rounded-md px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          >
+            유형검사
+          </Link>
+          <Link
             href="/search"
             className="rounded-md px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
           >
