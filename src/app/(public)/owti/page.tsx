@@ -80,7 +80,7 @@ export default function OwtiLandingPage() {
             </Link>
           </div>
           <p className="text-xs text-muted-foreground">
-            {TOTAL_QUESTIONS}문항 · 약 12~15분 소요 · 회원가입 불필요
+            {TOTAL_QUESTIONS}문항 · 약 1~3분 소요 · 회원가입 불필요
           </p>
         </div>
       </section>

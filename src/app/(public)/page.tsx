@@ -55,7 +55,7 @@ export default async function HomePage() {
                 유형. 16가지 타입 중 지금 나에게 필요한 변화의 방향을 찾아보세요.
               </p>
             </div>
-            <div className="flex shrink-0 flex-col items-start gap-2">
+            <div className="flex shrink-0 flex-col items-center gap-2">
               <Link
                 href="/owti"
                 className="rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background transition hover:opacity-90"
@@ -63,7 +63,7 @@ export default async function HomePage() {
                 무료로 검사 시작하기
               </Link>
               <span className="text-xs text-muted-foreground">
-                약 12~15분 · 회원가입 불필요
+                약 1~3분 · 회원가입 불필요
               </span>
             </div>
           </div>
