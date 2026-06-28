@@ -95,15 +95,27 @@ pnpm dev
 - [x] Postgres FTS — es-hangul 자모·초성 매칭
 - [x] Vercel Analytics + Speed Insights + GA4 (Consent Mode v2, 쿠키리스)
 - [x] 의료 면책 컴포넌트 (`MedicalDisclaimer`)
-- [ ] Naver Search Advisor 등록 (배포 후 수동)
+- [x] Naver Search Advisor 소유확인 (메타 태그 + HTML 파일 둘 다 코드에 내장)
 
 ## Naver Search Advisor 등록
 
-1. https://searchadvisor.naver.com/ 접속 → 사이트 등록
-2. 소유 확인 → **HTML 태그** 선택 → `content` 값 복사
-3. Vercel 환경변수에 `NAVER_SITE_VERIFICATION=값` 추가하고 재배포
-4. 등록 후 **사이트맵 제출** → `https://<domain>/sitemap.xml`
-5. RSS는 (아직) 없으므로 생략. 모바일 가이드라인 자동 통과
+소유확인은 **이미 코드에 내장**되어 있습니다 (두 방식 모두 지원, 둘 중 하나만으로 확인됨):
+
+- **메타 태그** — 루트 레이아웃이 `<meta name="naver-site-verification" content="…">`를
+  자동 출력. 토큰 기본값은 `src/config/site.ts`에 하드코딩(소유확인 토큰은 공개 값),
+  필요 시 `NAVER_SITE_VERIFICATION` 환경변수로 덮어쓰기.
+- **HTML 파일** (네이버 권장) — `/naverbe02a68c6d0d7362915cfef770a08910.html` 라우트 핸들러가
+  확인 파일을 서빙 (`public/` 디렉터리가 없어 `robots.txt`·`sitemap.xml`·`llms.txt`와 동일하게 처리).
+
+배포 후:
+
+1. https://searchadvisor.naver.com/ 접속 → 사이트 등록(`https://www.owellness.co.kr`)
+2. 소유 확인 → **HTML 파일** 또는 **HTML 태그** 중 하나 선택 → **[소유확인]** 클릭
+3. 등록 후 **사이트맵 제출** → `https://<domain>/sitemap.xml`
+4. RSS는 (아직) 없으므로 생략. 모바일 가이드라인 자동 통과
+
+> 네이버가 토큰을 재발급하면 `src/config/site.ts`의 기본값(또는 `NAVER_SITE_VERIFICATION`)과
+> `src/app/naver….html/route.ts`의 파일명·본문을 새 값으로 교체하세요.
 
 ## LLM 인용을 위한 GEO 엔드포인트
 

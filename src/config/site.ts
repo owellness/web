@@ -96,7 +96,13 @@ export const SITE_CONFIG = {
   },
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
-    naver: process.env.NAVER_SITE_VERIFICATION,
+    // Naver Search Advisor (네이버 서치어드바이저) ownership token. Site-verification
+    // tokens are public — they ship in the page <head> for anyone to read — so we
+    // hardcode it as a default to keep ownership verified even when the env var is
+    // unset. Override via NAVER_SITE_VERIFICATION if Naver reissues the token.
+    naver:
+      process.env.NAVER_SITE_VERIFICATION ??
+      "1e2665afb329f804367b8088b6d7ec6a81837251",
   },
 } as const;
 
