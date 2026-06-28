@@ -145,8 +145,9 @@ export default async function OwtiResultPage({
           </p>
         </header>
 
-        {/* Personalized score breakdown (client; from URL hash) */}
-        <OwtiScoreBreakdown />
+        {/* Personalized score breakdown (client; from URL hash or the
+            quiz's sessionStorage hand-off). */}
+        <OwtiScoreBreakdown code={code} />
 
         {/* Description */}
         <section className="mt-12">
