@@ -20,6 +20,9 @@ export async function GET(request: Request) {
   // SVG (no runtime CDN fetch); unknown emoji fall back to the raw glyph.
   const emoji = url.searchParams.get("emoji");
   const emojiSvg = emoji ? EMOJI_SVG[emoji] : undefined;
+  // Optional short code shown as an accent label above the title (e.g. the
+  // OWTI 4-letter type code "AFCH").
+  const code = url.searchParams.get("code");
 
   return new ImageResponse(
     (
@@ -78,15 +81,32 @@ export async function GET(request: Request) {
             </div>
           ) : null}
           <div
-            style={{
-              fontSize: 88,
-              fontWeight: 700,
-              lineHeight: 1.1,
-              letterSpacing: "-0.02em",
-              maxWidth: 1040,
-            }}
+            style={{ display: "flex", flexDirection: "column", gap: 12 }}
           >
-            {title}
+            {code ? (
+              <div
+                style={{
+                  display: "flex",
+                  fontSize: 48,
+                  fontWeight: 700,
+                  color: "#3b7a57",
+                  letterSpacing: "0.12em",
+                }}
+              >
+                {code}
+              </div>
+            ) : null}
+            <div
+              style={{
+                fontSize: 88,
+                fontWeight: 700,
+                lineHeight: 1.1,
+                letterSpacing: "-0.02em",
+                maxWidth: 1040,
+              }}
+            >
+              {title}
+            </div>
           </div>
           <div
             style={{
