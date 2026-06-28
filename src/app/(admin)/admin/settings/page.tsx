@@ -14,8 +14,8 @@ export default async function AdminSettingsPage() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">사이트 설정</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          홈 화면 소개 문구와 브라우저 파비콘을 수정합니다. 저장 즉시 공개
-          사이트에 반영됩니다.
+          홈 화면 소개 문구, 브라우저 파비콘, 공유용 OG 이미지를 수정합니다.
+          저장 즉시 공개 사이트에 반영됩니다.
         </p>
       </header>
       <SettingsForm initial={initial} action={updateSettingsAction} />

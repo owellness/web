@@ -31,6 +31,7 @@ export async function updateSettingsAction(
       heroTitle: String(formData.get("heroTitle") ?? "").trim(),
       heroSubtitle: String(formData.get("heroSubtitle") ?? "").trim(),
       faviconUrl: nullableUrl(formData.get("faviconUrl")),
+      ogImageUrl: nullableUrl(formData.get("ogImageUrl")),
     });
   } catch (e) {
     if (e instanceof ApplicationError) return { ok: false, error: e.message };

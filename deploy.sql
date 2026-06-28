@@ -241,8 +241,13 @@ CREATE TABLE IF NOT EXISTS "site_settings" (
 	"hero_title" text DEFAULT '' NOT NULL,
 	"hero_subtitle" text DEFAULT '' NOT NULL,
 	"favicon_url" text,
+	"og_image_url" text,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
+-- Admin-uploadable default OG image — migration 0006. ADD COLUMN IF NOT EXISTS
+-- upgrades databases provisioned before the column existed (the CREATE TABLE
+-- above is a no-op once the table is present).
+ALTER TABLE "site_settings" ADD COLUMN IF NOT EXISTS "og_image_url" text;
 
 -- ─────────────────────────────────────────────
 -- OWTI assessment funnel events — migration 0005

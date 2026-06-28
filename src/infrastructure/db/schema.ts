@@ -335,6 +335,9 @@ export const siteSettings = pgTable("site_settings", {
   heroTitle: text("hero_title").notNull().default(""),
   heroSubtitle: text("hero_subtitle").notNull().default(""),
   faviconUrl: text("favicon_url"),
+  // Admin-uploaded default Open Graph (social share) image. Overrides the
+  // bundled SITE_CONFIG.defaultOgImage site-wide when set.
+  ogImageUrl: text("og_image_url"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
 });
 
