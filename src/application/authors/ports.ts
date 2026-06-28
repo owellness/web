@@ -1,4 +1,4 @@
-import type { Author } from "./model";
+import type { Author, AuthorProfileUpdate } from "./model";
 
 export interface AuthorRepository {
   findById(id: string): Promise<Author | null>;
@@ -10,4 +10,5 @@ export interface AuthorRepository {
     displayName: string;
     bio?: string;
   }): Promise<Author>;
+  update(id: string, input: AuthorProfileUpdate): Promise<Author>;
 }

@@ -62,6 +62,12 @@ export default function AdminLayout({
               검사 통계
             </Link>
             <Link
+              href="/admin/profile"
+              className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
+            >
+              프로필
+            </Link>
+            <Link
               href="/admin/settings"
               className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
             >
