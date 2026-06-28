@@ -2,6 +2,8 @@ import { ImageResponse } from "next/og";
 
 import { SITE_NAME } from "@/config/site";
 
+import { EMOJI_SVG } from "./emojiSvg";
+
 export const runtime = "edge";
 
 const SIZE = { width: 1200, height: 630 };
@@ -11,9 +13,10 @@ export async function GET(request: Request) {
   const title = url.searchParams.get("title") ?? SITE_NAME;
   const category = url.searchParams.get("category") ?? "wellness";
   const author = url.searchParams.get("author") ?? SITE_NAME;
-  // Optional leading emoji (e.g. OWTI type icon). Rendered via Twemoji by
-  // ImageResponse's default `emoji` option; omitted when not provided.
+  // Optional leading emoji (e.g. OWTI type icon). We render a bundled Twemoji
+  // SVG (no runtime CDN fetch); unknown emoji fall back to the raw glyph.
   const emoji = url.searchParams.get("emoji");
+  const emojiSvg = emoji ? EMOJI_SVG[emoji] : undefined;
 
   return new ImageResponse(
     (
@@ -63,7 +66,10 @@ export async function GET(request: Request) {
             color: "#14110f",
           }}
         >
-          {emoji ? (
+          {emojiSvg ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={emojiSvg} width={104} height={104} alt="" />
+          ) : emoji ? (
             <div style={{ display: "flex", fontSize: 104, lineHeight: 1 }}>
               {emoji}
             </div>
