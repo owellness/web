@@ -13,11 +13,7 @@ export const revalidate = 60;
 
 const PAGE_TITLE = "인기 콘텐츠";
 const PAGE_DESCRIPTION =
-  "지금 가장 많이 읽고 있는 오! 웰니스 콘텐츠를 조회수 순으로 모았습니다.";
-
-const compactNumber = new Intl.NumberFormat("ko-KR", { notation: "compact" });
-
-const formatViews = (count: number): string => `조회수 ${compactNumber.format(count)}`;
+  "지금 가장 많이 읽고 있는 오! 웰니스 콘텐츠를 모았습니다.";
 
 const formatReadingTime = (sec: number): string =>
   `${Math.max(1, Math.round(sec / 60))}분 읽기`;
@@ -69,7 +65,7 @@ export default async function PopularPage() {
       <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         {items.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-sm text-muted-foreground">
-            아직 집계된 조회수가 없습니다. 콘텐츠를 둘러보시면 인기 순위가
+            아직 집계된 순위가 없습니다. 콘텐츠를 둘러보시면 인기 순위가
             채워집니다.
           </div>
         ) : (
@@ -80,17 +76,12 @@ export default async function PopularPage() {
                   href={`/${article.primaryCategorySlug}/${article.slug}`}
                   className="group flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-6 transition hover:border-accent/40 hover:bg-muted/40"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <span
-                      aria-hidden
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-semibold text-accent"
-                    >
-                      {index + 1}
-                    </span>
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {formatViews(article.viewCount)}
-                    </span>
-                  </div>
+                  <span
+                    aria-hidden
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-semibold text-accent"
+                  >
+                    {index + 1}
+                  </span>
                   <h2 className="text-lg font-semibold leading-snug text-card-foreground group-hover:text-accent">
                     <span className="sr-only">{index + 1}위. </span>
                     {article.title}
