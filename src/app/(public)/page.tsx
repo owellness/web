@@ -1,9 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
-import { categoryService, settingsService } from "@/composition";
+import {
+  buildOrganizationJsonLd,
+  buildWebSiteJsonLd,
+} from "@/application/seo/jsonld";
 import { DEFAULT_SETTINGS } from "@/application/settings/model";
+import { SITE_CONFIG, SITE_URL } from "@/config/site";
+import { JsonLd } from "@/presentation/components/public/JsonLd";
+
+import { categoryService, settingsService } from "@/composition";
 
 export const revalidate = 300; // ISR every 5 min
+
+// The homepage is the canonical root of the site. Every other public page sets
+// a self-referencing canonical; without one here Google can treat query-string
+// or alternate-host variants of "/" as separate URLs. Title/description/OG are
+// inherited from the root layout (do not set openGraph here — a page-level
+// openGraph replaces the layout's entirely instead of merging).
+export const metadata: Metadata = {
+  alternates: { canonical: `${SITE_URL}/` },
+};
 
 export default async function HomePage() {
   const [cats, settings] = await Promise.all([
@@ -12,6 +29,11 @@ export default async function HomePage() {
   ]);
   return (
     <>
+      {/* Site-identity structured data belongs on the root URL: WebSite enables
+          the sitelinks search box, Organization feeds the knowledge panel. */}
+      <JsonLd schema={buildWebSiteJsonLd(SITE_CONFIG)} />
+      <JsonLd schema={buildOrganizationJsonLd(SITE_CONFIG)} />
+
       <section className="border-b border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-20 sm:px-6 md:py-28">
           <p className="text-sm font-medium uppercase tracking-widest text-accent">
