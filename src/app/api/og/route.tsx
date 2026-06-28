@@ -45,7 +45,9 @@ export async function GET(request: Request) {
               height: 12,
               borderRadius: "50%",
               background: "#3b7a57",
-              display: "inline-block",
+              // satori (next/og) only supports flex/block/contents/none — not
+              // inline-block, which throws and 500s the whole image.
+              display: "flex",
             }}
           />
           {category}
