@@ -358,6 +358,41 @@ export const mediaAssets = pgTable("media_assets", {
 });
 
 // ─────────────────────────────────────────────────────────────
+// Domain: OWTI assessment funnel events (anonymous analytics)
+// ─────────────────────────────────────────────────────────────
+
+// Funnel stages emitted by the OWTI quiz. `start` once per session on open,
+// `advance` each time a domain step is completed (step 1–3), `complete` on
+// finish (with the resulting 4-letter type code). No per-question answers are
+// stored — only progress + final type, keyed by an anonymous random session id.
+export const owtiEventType = pgEnum("owti_event_type", [
+  "start",
+  "advance",
+  "complete",
+]);
+
+export const owtiEvents = pgTable(
+  "owti_events",
+  {
+    id: uuid("id").primaryKey().default(idDefault()),
+    sessionId: varchar("session_id", { length: 40 }).notNull(),
+    type: owtiEventType("type").notNull(),
+    // advance: the domain step just completed (1–3); null for start/complete.
+    step: integer("step"),
+    // complete: the resulting 4-letter type code (e.g. "AFCH"); null otherwise.
+    code: varchar("code", { length: 4 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .default(now()),
+  },
+  (t) => [
+    index("owti_events_type_created_idx").on(t.type, t.createdAt),
+    index("owti_events_session_idx").on(t.sessionId),
+    index("owti_events_created_idx").on(t.createdAt.desc()),
+  ],
+);
+
+// ─────────────────────────────────────────────────────────────
 // Exports for the Auth.js Drizzle adapter binding (infrastructure/auth)
 // ─────────────────────────────────────────────────────────────
 

@@ -45,7 +45,8 @@ export default function OwtiTestPage() {
 
       <p className="mt-10 text-center text-xs leading-relaxed text-muted-foreground">
         {SITE_NAME}의 OWTI 검사는 정보 제공을 목적으로 하며, 의학적 진단을
-        대체하지 않습니다.
+        대체하지 않습니다. 개별 응답은 저장되지 않으며, 서비스 개선을 위한 익명
+        통계(진행 단계·완료 유형)만 수집됩니다.
       </p>
     </section>
   );

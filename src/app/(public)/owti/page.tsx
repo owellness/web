@@ -220,7 +220,8 @@ export default function OwtiLandingPage() {
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             지난 한 달을 떠올리며 {TOTAL_QUESTIONS}문항에 답해보세요. 결과는 기기에서
-            바로 계산되며 저장되지 않습니다.
+            바로 계산되며, 개별 응답은 저장되지 않습니다. 서비스 개선을 위한 익명
+            통계(진행 단계·완료 유형)만 수집됩니다.
           </p>
           <Link
             href="/owti/test"

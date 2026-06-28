@@ -44,6 +44,11 @@ export default async function AdminDashboardPage() {
             desc: "구독 현황과 발송 이력 확인.",
           },
           {
+            href: "/admin/owti",
+            title: "웰니스 검사 통계",
+            desc: "OWTI 검사 첫 접속·단계별 이탈·완료·유형 분포.",
+          },
+          {
             href: "/admin/settings",
             title: "사이트 설정",
             desc: "홈 화면 소개 문구와 파비콘 수정.",

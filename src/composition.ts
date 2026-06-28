@@ -4,6 +4,7 @@ import { createCategoryService } from "@/application/categories/service";
 import { createFaqService } from "@/application/faq/service";
 import { createMediaService } from "@/application/media/service";
 import { createNewsletterService } from "@/application/newsletter/service";
+import { createOwtiAnalyticsService } from "@/application/owtiAnalytics/service";
 import { createPageService } from "@/application/pages/service";
 import { createSearchService } from "@/application/search/service";
 import { createSettingsService } from "@/application/settings/service";
@@ -24,6 +25,7 @@ import { drizzleAuthorRepository } from "@/infrastructure/repositories/drizzleAu
 import { drizzleCampaignRepository } from "@/infrastructure/repositories/drizzleCampaignRepository";
 import { drizzleCategoryRepository } from "@/infrastructure/repositories/drizzleCategoryRepository";
 import { drizzleFaqRepository } from "@/infrastructure/repositories/drizzleFaqRepository";
+import { drizzleOwtiEventRepository } from "@/infrastructure/repositories/drizzleOwtiEventRepository";
 import { drizzlePageRepository } from "@/infrastructure/repositories/drizzlePageRepository";
 import { drizzleSettingsRepository } from "@/infrastructure/repositories/drizzleSettingsRepository";
 import { drizzleSubscriberRepository } from "@/infrastructure/repositories/drizzleSubscriberRepository";
@@ -43,6 +45,10 @@ export const articleService = createArticleService({
 export const categoryService = createCategoryService(drizzleCategoryRepository);
 
 export const faqService = createFaqService(drizzleFaqRepository);
+
+export const owtiAnalyticsService = createOwtiAnalyticsService(
+  drizzleOwtiEventRepository,
+);
 
 export const pageService = createPageService({
   repository: drizzlePageRepository,
