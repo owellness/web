@@ -15,6 +15,7 @@ import { JsonLd } from "@/presentation/components/public/JsonLd";
 import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDisclaimer";
 import { NewsletterCTA } from "@/presentation/components/public/NewsletterCTA";
 import { OwtiScoreBreakdown } from "@/presentation/components/public/owti/OwtiScoreBreakdown";
+import { OwtiShareCard } from "@/presentation/components/public/owti/OwtiShareCard";
 
 import { categoryService } from "@/composition";
 
@@ -174,6 +175,10 @@ export default async function OwtiResultPage({
           />
           <ResultList title="핵심 웰니스 팁" icon="💡" items={type.tips} tone="accent" />
         </div>
+
+        {/* Downloadable / shareable Instagram-feed card (client; reads personal
+            scores from the URL hash or the quiz's sessionStorage hand-off). */}
+        <OwtiShareCard code={code} />
 
         {/* Recommended content (weak domains) — or a "maintain" note when the
             type has no weak domains at all (AFCH). */}
