@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import {
   DOMAINS_IN_ORDER,
@@ -59,12 +60,16 @@ export default function OwtiLandingPage() {
             <br />
             변화의 방향이 보입니다
           </h1>
-          <p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">
-            웰니스를 <strong className="text-foreground">실천 · 몸 · 마음 · 연결</strong>{" "}
-            4개 영역으로 나누어, 나의 강점과 취약 영역을 4글자 코드로 알려드립니다.
-            성격이 아닌 <strong className="text-foreground">지금의 생활습관</strong>을
-            측정하기에, 몇 달 뒤엔 유형이 달라질 수 있어요.
-          </p>
+          <div className="flex max-w-2xl flex-col gap-3 text-lg leading-relaxed text-muted-foreground">
+            <p>
+              OWTI(O! Wellness Type Indicator)는 지금 나의 생활습관을 측정해 강점과
+              취약 영역을 4글자 코드로 보여줍니다.
+            </p>
+            <p>
+              성격이 아닌 <strong className="text-foreground">지금의 행동</strong>을
+              측정합니다. 행동은 바꿀 수 있습니다.
+            </p>
+          </div>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/owti/test"
@@ -82,6 +87,29 @@ export default function OwtiLandingPage() {
           <p className="text-xs text-muted-foreground">
             {TOTAL_QUESTIONS}문항 · 약 1~3분 소요 · 회원가입 불필요
           </p>
+        </div>
+      </section>
+
+      {/* What makes OWTI different */}
+      <section className="border-b border-border bg-muted/30">
+        <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+            OWTI는 다른 검사와 무엇이 다른가요?
+          </h2>
+          <div className="mt-6 space-y-4 text-base leading-relaxed text-muted-foreground">
+            <p>지금 내가 어떻게 살고 있는지를 4가지 영역으로 들여다봅니다.</p>
+            <p>
+              운동을 하고 있는지, 잠을 충분히 자는지, 스트레스를 풀어내고 있는지,
+              나를 채우는 관계가 있는지. 모두{" "}
+              <strong className="text-foreground">오늘 당장 바꿀 수 있는</strong>{" "}
+              것들입니다.
+            </p>
+            <p>
+              연구에 따르면 새로운 건강 습관은 평균 3~6개월이면 자리를 잡습니다.
+              <Cite refs={[1, 2]} /> 3개월 뒤 다시 검사해보세요. 코드가 달라져
+              있다면, 그게 변화의 증거입니다.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -212,6 +240,122 @@ export default function OwtiLandingPage() {
         </div>
       </section>
 
+      {/* Who designed it */}
+      <section className="border-y border-border bg-muted/30">
+        <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+            누가 설계했나요?
+          </h2>
+          <div className="mt-6 rounded-2xl border border-border bg-card p-6 sm:p-8">
+            <p className="text-xs font-medium uppercase tracking-widest text-accent">
+              설계자
+            </p>
+            <p className="mt-1 text-xl font-semibold text-card-foreground">
+              차민기 원장
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              한의사 · 국제 생활습관의학회(IBLM) 전문의
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {[
+                "Wellness Alliance 공인 웰니스 전문가 (CWP)",
+                "ACE 공인 강사",
+                "FMS 공인 강사",
+              ].map((credential) => (
+                <span
+                  key={credential}
+                  className="rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted-foreground"
+                >
+                  {credential}
+                </span>
+              ))}
+            </div>
+            <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+              운동, 식이, 수면, 스트레스까지 몸과 마음을 함께 다루는 통합적
+              웰니스를 임상 현장에서 실천해왔습니다.
+            </p>
+            <blockquote className="mt-5 border-l-2 border-accent pl-4 text-base font-medium italic leading-relaxed text-foreground">
+              “선생님, 저 왜 알면서도 못 바꾸는 걸까요?”
+            </blockquote>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              진료실에서 반복되던 질문입니다. 무엇을 바꿔야 하는지 모르는 게
+              아니라, 지금 어디가 약한지 모르는 게 문제라고 봤습니다. OWTI는 그
+              생각에서 시작했습니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Why you can trust it */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+          왜 신뢰할 수 있나요?
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          OWTI를 설계하며 지킨 다섯 가지 원칙입니다.
+        </p>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <TrustCard title="근거 기반으로 설계했습니다" wide>
+            <p>
+              OWTI의 4개 영역은 Wellness Alliance·IBLM 등 국제 웰니스 기관의 핵심
+              건강 행동 프레임워크와 수십 년간 축적된 임상 연구를 기반으로
+              설계됐습니다.
+              <Cite refs={[3]} />
+            </p>
+            <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
+              {EVIDENCE.map((e, i) => (
+                <li key={i} className="flex gap-2">
+                  <span className="mt-0.5 text-accent" aria-hidden>
+                    •
+                  </span>
+                  <span>
+                    {e.lead}
+                    {e.stat ? (
+                      <strong className="font-semibold text-accent">
+                        {e.stat}
+                      </strong>
+                    ) : null}
+                    {e.tail}
+                    <Cite refs={[e.ref]} />
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </TrustCard>
+
+          <TrustCard title="태도가 아닌 행동을 묻습니다">
+            <p>
+              “긍정적인 사람인가요?”가 아니라 “실수를 배움의 기회로
+              받아들이나요?”를 묻습니다. 행동 기반 문항이 자기인식 기반보다 측정
+              일관성이 높습니다.
+              <Cite refs={[15]} />
+            </p>
+          </TrustCard>
+
+          <TrustCard title="48문항, 균형 있게 구성했습니다">
+            <p>
+              4개 영역, 12개 하위 요소, 요소당 4문항. 심리측정학적 신뢰도 기준을
+              충족하는 구조입니다.
+              <Cite refs={[16]} />
+            </p>
+          </TrustCard>
+
+          <TrustCard title="응답은 저장되지 않습니다">
+            <p>
+              모든 계산은 기기 안에서 이루어집니다. 회원가입 없이 시작할 수
+              있습니다.
+            </p>
+          </TrustCard>
+
+          <TrustCard title="낮은 점수는 문제가 아닙니다">
+            <p>
+              지금 어디가 약한지 알면, 무엇부터 시작할지 보입니다. OWTI는 점수를
+              매기는 게 아니라 방향을 찾는 도구입니다.
+            </p>
+          </TrustCard>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="mx-auto max-w-3xl px-4 pb-20 sm:px-6">
         <div className="rounded-3xl border border-border bg-card p-8 text-center sm:p-10">
@@ -234,6 +378,322 @@ export default function OwtiLandingPage() {
           </div>
         </div>
       </section>
+
+      {/* References */}
+      <section className="border-t border-border bg-muted/20">
+        <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
+            참고문헌
+          </h2>
+          <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
+            References
+          </p>
+          <ol className="mt-6 list-none space-y-4 text-xs leading-relaxed text-muted-foreground">
+            {REFERENCES.map(({ n, cites }) => (
+              <li key={n} id={`ref-${n}`} className="scroll-mt-24">
+                <div className="flex gap-2">
+                  <span className="shrink-0 font-mono font-medium text-foreground/70">
+                    [{n}]
+                  </span>
+                  <div className="space-y-1">
+                    {cites.map((c, i) => (
+                      <p key={i}>
+                        {c.text}
+                        {c.venue ? " " : ""}
+                        {c.venue ? <em className="italic">{c.venue}</em> : null}
+                        {c.detail ? c.detail : c.venue ? "." : ""}
+                        {c.url ? (
+                          <>
+                            {" "}
+                            <a
+                              href={c.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="break-all text-accent/90 underline-offset-2 hover:text-accent hover:underline"
+                            >
+                              {c.url}
+                            </a>
+                          </>
+                        ) : null}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
     </>
   );
 }
+
+/** Inline superscript citation linking down to the references list. */
+function Cite({ refs }: { refs: number[] }) {
+  return (
+    <sup className="whitespace-nowrap font-normal">
+      {refs.map((n) => (
+        <a
+          key={n}
+          href={`#ref-${n}`}
+          aria-label={`참고문헌 ${n}번`}
+          className="px-px text-accent no-underline hover:underline"
+        >
+          [{n}]
+        </a>
+      ))}
+    </sup>
+  );
+}
+
+/** One "왜 신뢰할 수 있나요?" point. `wide` spans both columns on sm+. */
+function TrustCard({
+  title,
+  children,
+  wide = false,
+}: {
+  title: string;
+  children: ReactNode;
+  wide?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border border-border bg-card p-6${
+        wide ? " sm:col-span-2" : ""
+      }`}
+    >
+      <h3 className="text-base font-semibold text-card-foreground">{title}</h3>
+      <div className="mt-3 text-sm leading-relaxed text-muted-foreground">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Evidence bullets for the "근거 기반으로 설계했습니다" card. The `stat`
+ * segment is highlighted; an empty `stat` renders as plain prose. */
+const EVIDENCE: { lead: string; stat: string; tail: string; ref: number }[] = [
+  {
+    lead: "규칙적인 신체 활동은 사망 위험을 최대 ",
+    stat: "22%",
+    tail: " 낮춥니다.",
+    ref: 6,
+  },
+  {
+    lead: "수면 7시간 미만은 사망 위험을 ",
+    stat: "14%",
+    tail: " 높입니다.",
+    ref: 8,
+  },
+  {
+    lead: "낙관적 태도는 평균 수명을 ",
+    stat: "11~15%",
+    tail: " 늘리는 것과 연관됩니다.",
+    ref: 10,
+  },
+  {
+    lead: "사회적 연결이 강한 사람은 생존 가능성이 ",
+    stat: "50%",
+    tail: " 높습니다.",
+    ref: 13,
+  },
+  {
+    lead: "삶의 목적의식이 높을수록 사망 위험이 낮습니다.",
+    stat: "",
+    tail: "",
+    ref: 12,
+  },
+];
+
+/** Citation entry: prose `text`, italicised `venue`, optional post-venue
+ * `detail` (volume/pages), and an optional source `url`. */
+type RefCitation = {
+  text: string;
+  venue?: string;
+  detail?: string;
+  url?: string;
+};
+
+const REFERENCES: { n: number; cites: RefCitation[] }[] = [
+  {
+    n: 1,
+    cites: [
+      {
+        text: "Gardiner B, et al. (2024). Time to Form a Habit: A Systematic Review and Meta-Analysis of Health Behaviour Habit Formation and Its Determinants.",
+        venue: "PMC",
+        url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11641623/",
+      },
+    ],
+  },
+  {
+    n: 2,
+    cites: [
+      {
+        text: "Keller J, et al. (2021). Habit formation following routine-based versus time-based cue planning: A randomized controlled trial.",
+        venue: "British Journal of Health Psychology",
+        url: "https://doi.org/10.1111/bjhp.12504",
+      },
+    ],
+  },
+  {
+    n: 3,
+    cites: [
+      {
+        text: "Dysinger WS, et al. (2024). Foundations of Lifestyle Medicine and its Evolution.",
+        venue: "Mayo Clinic Proceedings: Innovations, Quality & Outcomes",
+        url: "https://www.mcpiqojournal.org/article/S2542-4548(23)00075-9/fulltext",
+      },
+    ],
+  },
+  {
+    n: 4,
+    cites: [
+      {
+        text: "Polman E, et al. (2016). Curiosity as a driver of healthy behavior change. American Psychological Association Annual Convention.",
+        url: "https://www.apa.org/news/press/releases/2016/08/curiosity-behavior",
+      },
+    ],
+  },
+  {
+    n: 5,
+    cites: [
+      {
+        text: "McEwan D, et al. (2016). The effects of goal setting on physical activity: A meta-analysis of randomized controlled trials.",
+        venue: "British Journal of Health Psychology",
+        detail: ", 21(2), 383–404.",
+      },
+      {
+        text: "Shilts MK, et al. (2011). Goal setting as a health behavior change strategy in overweight and obese adults.",
+        venue: "Patient Education and Counseling",
+        url: "https://www.sciencedirect.com/science/article/abs/pii/S0738399111003855",
+      },
+    ],
+  },
+  {
+    n: 6,
+    cites: [
+      {
+        text: "Samitz G, et al. (2011). Physical Activity and All-cause Mortality: An Updated Meta-analysis with Different Intensity Categories.",
+        venue: "European Journal of Epidemiology",
+      },
+    ],
+  },
+  {
+    n: 7,
+    cites: [
+      {
+        text: "WHO/FAO Expert Consultation. (2003). Diet, Nutrition and the Prevention of Chronic Diseases.",
+        venue: "WHO Technical Report Series 916",
+        url: "https://www.fao.org/4/ac911e/ac911e00.htm",
+      },
+    ],
+  },
+  {
+    n: 8,
+    cites: [
+      {
+        text: "Liu TZ, et al. (2016). Nighttime sleep duration, 24-hour sleep duration and risk of all-cause mortality among adults.",
+        venue: "Scientific Reports",
+        url: "https://www.nature.com/articles/srep21480",
+      },
+      {
+        text: "Baranwal N, et al. (2025). Imbalanced sleep increases mortality risk by 14–34%: a meta-analysis.",
+        venue: "GeroScience",
+        url: "https://link.springer.com/article/10.1007/s11357-025-01592-y",
+      },
+    ],
+  },
+  {
+    n: 9,
+    cites: [
+      {
+        text: "Singh B, et al. (2023). Effectiveness of physical activity interventions for improving depression, anxiety and distress: an overview of systematic reviews.",
+        venue: "PMC",
+        url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10579187/",
+      },
+      {
+        text: "American Psychological Association. (2019). Mindfulness meditation: A research-proven way to reduce stress.",
+        url: "https://www.apa.org/topics/mindfulness/meditation",
+      },
+    ],
+  },
+  {
+    n: 10,
+    cites: [
+      {
+        text: "Lee LO, et al. (2019). Optimism is associated with exceptional longevity in 2 epidemiologic cohorts of men and women.",
+        venue: "PNAS",
+        url: "https://www.pnas.org/doi/10.1073/pnas.1900712116",
+      },
+    ],
+  },
+  {
+    n: 11,
+    cites: [
+      {
+        text: "Sonnentag S. (2001). Work, Recovery Activities, and Individual Well-Being: A Diary Study.",
+        venue: "Journal of Occupational Health Psychology",
+      },
+    ],
+  },
+  {
+    n: 12,
+    cites: [
+      {
+        text: "Hill PL, Turiano NA. (2014). Purpose in Life as a Predictor of Mortality Across Adulthood.",
+        venue: "Psychological Science",
+        detail: ", 25(7), 1482–1486.",
+        url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4224996/",
+      },
+    ],
+  },
+  {
+    n: 13,
+    cites: [
+      {
+        text: "Vila J. (2021). Social Support and Longevity: Meta-Analysis-Based Evidence and Psychobiological Mechanisms.",
+        venue: "Frontiers in Psychology",
+        url: "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8473615/",
+      },
+      {
+        text: "Holt-Lunstad J, et al. (2010). Social relationships and mortality risk: a meta-analytic review.",
+        venue: "PLOS Medicine",
+      },
+    ],
+  },
+  {
+    n: 14,
+    cites: [
+      {
+        text: "Maslach C, Leiter MP. (2016). Burnout. In Stress: Concepts, Cognition, Emotion, and Behavior.",
+        venue: "Academic Press",
+      },
+    ],
+  },
+  {
+    n: 15,
+    cites: [
+      {
+        text: "Lam CW, et al. (2020). A global lifestyle assessment: Psychometric properties of the General Lifestyle Questionnaire.",
+        venue: "ScienceDirect",
+        url: "https://www.sciencedirect.com/science/article/abs/pii/S003329841930041X",
+      },
+      {
+        text: "García-Hermoso A, et al. (2022). Validity and Reliability of the FANTASTIC Questionnaire.",
+        venue: "PMC",
+        url: "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9413330/",
+      },
+    ],
+  },
+  {
+    n: 16,
+    cites: [
+      {
+        text: "Streiner DL. (2003). Starting at the Beginning: An Introduction to Coefficient Alpha and Internal Consistency.",
+        venue: "Journal of Personality Assessment",
+        detail: ", 80(1), 99–103.",
+        url: "https://doi.org/10.1207/S15327752JPA8001_18",
+      },
+    ],
+  },
+];
