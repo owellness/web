@@ -12,6 +12,12 @@ import { SITE_NAME, SITE_URL } from "@/config/site";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
 import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDisclaimer";
 
+import { authorService } from "@/composition";
+
+// The designer card pulls 차민기 원장's photo from the admin-managed author
+// profile, so re-fetch periodically rather than baking it in forever.
+export const revalidate = 3600;
+
 const OWTI_URL = `${SITE_URL}/owti`;
 const TITLE = "웰니스 유형 검사 · OWTI";
 const DESCRIPTION = `O! Wellness Type Indicator — 4개 영역(실천·몸·마음·연결)과 ${TOTAL_QUESTIONS}문항으로 알아보는 나의 웰니스 유형. 16가지 타입 중 지금 나에게 필요한 변화의 방향을 찾아보세요.`;
@@ -39,7 +45,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function OwtiLandingPage() {
+export default async function OwtiLandingPage() {
+  // The "누가 설계했나요?" card photo comes from the author profile with slug
+  // "minkicha" so it tracks /authors/minkicha. A missing DB or avatar falls
+  // back to a monogram, keeping the page renderable everywhere.
+  const designer = await authorService.findBySlug("minkicha").catch(() => null);
+
   return (
     <>
       <JsonLd
@@ -247,15 +258,23 @@ export default function OwtiLandingPage() {
             누가 설계했나요?
           </h2>
           <div className="mt-6 rounded-2xl border border-border bg-card p-6 sm:p-8">
-            <p className="text-xs font-medium uppercase tracking-widest text-accent">
-              설계자
-            </p>
-            <p className="mt-1 text-xl font-semibold text-card-foreground">
-              차민기 원장
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              한의사 · 국제 생활습관의학회(IBLM) 전문의
-            </p>
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              <AuthorAvatar
+                avatarUrl={designer?.avatarUrl ?? null}
+                name={designer?.displayName ?? "차민기 원장"}
+              />
+              <div>
+                <p className="text-xs font-medium uppercase tracking-widest text-accent">
+                  설계자
+                </p>
+                <p className="mt-1 text-xl font-semibold text-card-foreground">
+                  차민기 원장
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  한의사 · 국제 생활습관의학회(IBLM) 전문의
+                </p>
+              </div>
+            </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {[
                 "Wellness Alliance 공인 웰니스 전문가 (CWP)",
@@ -443,6 +462,35 @@ function Cite({ refs }: { refs: number[] }) {
         </a>
       ))}
     </sup>
+  );
+}
+
+/** Designer headshot for the "누가 설계했나요?" card — the admin-managed avatar
+ * when present, otherwise a monogram derived from the name. */
+function AuthorAvatar({
+  avatarUrl,
+  name,
+}: {
+  avatarUrl: string | null;
+  name: string;
+}) {
+  if (avatarUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt={name}
+        className="size-20 shrink-0 rounded-full border border-border object-cover"
+      />
+    );
+  }
+  return (
+    <div
+      aria-hidden
+      className="flex size-20 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-2xl font-semibold text-muted-foreground"
+    >
+      {name.charAt(0)}
+    </div>
   );
 }
 
