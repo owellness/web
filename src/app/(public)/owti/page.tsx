@@ -6,12 +6,33 @@ import {
   TOTAL_QUESTIONS,
   TYPES,
 } from "@/application/owti";
-import { buildBreadcrumbJsonLd } from "@/application/seo/jsonld";
+import {
+  buildBreadcrumbJsonLd,
+  buildPersonJsonLd,
+} from "@/application/seo/jsonld";
 import { SITE_NAME, SITE_URL } from "@/config/site";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
 import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDisclaimer";
 
 const OWTI_URL = `${SITE_URL}/owti`;
+
+// Designer of the OWTI assessment and the external credentials cited on the
+// landing page as a trust/E-E-A-T signal. The certification links point to the
+// issuing bodies so readers can verify them directly.
+const DESIGNER_NAME = "차민기";
+const DESIGNER_URL = `${SITE_URL}/authors/minkicha`;
+const CWP_CERT_URL =
+  "https://www.wellnessalliance.org/cwp-certification/the-gold-standard-wellness-certification";
+const IBLM_CERT_URL = "https://iblm.org/lifestyle-medicine-certification/";
+
+const DESIGNER_PERSON_SCHEMA = buildPersonJsonLd({
+  name: DESIGNER_NAME,
+  url: DESIGNER_URL,
+  bio: `웰니스 얼라이언스 CWP(The Gold Standard Wellness Certification)와 국제 생활습관의학 위원회(IBLM)의 생활습관의학 인증을 보유한 웰니스 전문가입니다. O! Wellness Type Indicator(OWTI) 검사를 설계했습니다.`,
+  affiliation: SITE_NAME,
+  sameAs: [DESIGNER_URL, CWP_CERT_URL, IBLM_CERT_URL],
+});
+
 const TITLE = "웰니스 유형 검사 · OWTI";
 const DESCRIPTION = `O! Wellness Type Indicator — 4개 영역(실천·몸·마음·연결)과 ${TOTAL_QUESTIONS}문항으로 알아보는 나의 웰니스 유형. 16가지 타입 중 지금 나에게 필요한 변화의 방향을 찾아보세요.`;
 const OG_IMAGE = `${SITE_URL}/api/og?title=${encodeURIComponent(
@@ -47,6 +68,7 @@ export default function OwtiLandingPage() {
           { name: "웰니스 유형 검사", url: OWTI_URL },
         ])}
       />
+      <JsonLd schema={DESIGNER_PERSON_SCHEMA} />
 
       {/* Hero */}
       <section className="border-b border-border">
@@ -82,6 +104,72 @@ export default function OwtiLandingPage() {
           <p className="text-xs text-muted-foreground">
             {TOTAL_QUESTIONS}문항 · 약 1~3분 소요 · 회원가입 불필요
           </p>
+        </div>
+      </section>
+
+      {/* Designed by an expert */}
+      <section className="border-b border-border bg-muted/30">
+        <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent">
+            검사 설계
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+            웰니스 전문가가 설계했습니다
+          </h2>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
+            OWTI는{" "}
+            <Link
+              href="/authors/minkicha"
+              className="font-medium text-accent hover:underline"
+            >
+              {DESIGNER_NAME}
+            </Link>
+            가 설계했습니다. 아래 두 가지 국제 자격을 바탕으로{" "}
+            <strong className="text-foreground">실천 · 몸 · 마음 · 연결</strong>{" "}
+            4개 영역과 {TOTAL_QUESTIONS}문항의 검사 구조를 구성했습니다.
+          </p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <a
+              href={CWP_CERT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-2xl border border-border bg-card p-6 transition hover:border-accent/40"
+            >
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                Wellness Alliance
+              </p>
+              <p className="mt-2 text-base font-semibold text-card-foreground">
+                CWP · The Gold Standard Wellness Certification
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                웰니스 얼라이언스(Wellness Alliance)가 인증하는 웰니스 전문가
+                (Certified Wellness Practitioner) 자격입니다.
+              </p>
+              <span className="mt-3 inline-block text-sm font-medium text-accent group-hover:underline">
+                자격 확인하기 →
+              </span>
+            </a>
+            <a
+              href={IBLM_CERT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-2xl border border-border bg-card p-6 transition hover:border-accent/40"
+            >
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                IBLM
+              </p>
+              <p className="mt-2 text-base font-semibold text-card-foreground">
+                Lifestyle Medicine Certification
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                국제 생활습관의학 위원회(International Board of Lifestyle
+                Medicine)의 생활습관의학 인증입니다.
+              </p>
+              <span className="mt-3 inline-block text-sm font-medium text-accent group-hover:underline">
+                자격 확인하기 →
+              </span>
+            </a>
+          </div>
         </div>
       </section>
 
