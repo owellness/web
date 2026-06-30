@@ -171,8 +171,8 @@ export function OwtiQuiz() {
           <span className="font-medium text-foreground">
             {step + 1}/{DOMAINS_IN_ORDER.length} · {domain.name}
           </span>
-          <span className="text-muted-foreground">
-            {answeredTotal}/{TOTAL_QUESTIONS} 문항
+          <span className="text-muted-foreground tabular-nums">
+            {progressPct}% 완료
           </span>
         </div>
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
