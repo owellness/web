@@ -39,7 +39,7 @@ export function OwtiScoreBreakdown({ code }: { code: string }) {
     return (
       <aside className="mt-10 rounded-2xl border border-dashed border-border bg-muted/30 p-6 text-center">
         <p className="text-sm text-muted-foreground">
-          아직 검사를 완료하지 않으셨네요. 48문항에 답하면 나의 영역별 점수를
+          아직 검사를 완료하지 않으셨네요. 검사에 답하면 나의 영역별 점수를
           확인할 수 있어요.
         </p>
         <Link

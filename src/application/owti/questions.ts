@@ -27,7 +27,7 @@ export const QUESTIONS: readonly OwtiQuestion[] = [
   { id: 12, domain: "action", facet: "목표", text: "나는 건강 목표를 이루기 위해 구체적인 계획을 세운다." },
 
   // ── 건강한 몸 (Fitness) ─────────────────────────────────────────────
-  { id: 13, domain: "fitness", facet: "신체 활동", text: "나는 일주일에 3일 이상 30분 이상 몸을 움직이는 활동을 한다." },
+  { id: 13, domain: "fitness", facet: "신체 활동", text: "나는 일주일에 합쳐서 150분 이상 숨이 차는 정도로 움직인다. (예: 빠르게 걷기 30분씩 주 5일)" },
   { id: 14, domain: "fitness", facet: "신체 활동", text: "나는 유산소 운동 외에 근력 운동도 주 1회 이상 한다." },
   { id: 15, domain: "fitness", facet: "신체 활동", text: "나는 1시간 이상 앉아 있으면 일어나서 몸을 움직인다." },
   { id: 16, domain: "fitness", facet: "신체 활동", text: "나는 엘리베이터보다 계단을 이용하는 등 일상 속 활동량을 늘리려 한다." },

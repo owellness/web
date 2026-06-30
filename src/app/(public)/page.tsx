@@ -73,8 +73,8 @@ export default async function HomePage() {
                 나의 웰니스 유형은?
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                실천 · 몸 · 마음 · 연결 4개 영역, 48문항으로 알아보는 나의 웰니스
-                유형. 16가지 타입 중 지금 나에게 필요한 변화의 방향을 찾아보세요.
+                실천 · 몸 · 마음 · 연결 4개 영역으로 알아보는 나의 웰니스 유형.
+                16가지 타입 중 지금 나에게 필요한 변화의 방향을 찾아보세요.
               </p>
             </div>
             <div className="flex shrink-0 flex-col items-center gap-2">

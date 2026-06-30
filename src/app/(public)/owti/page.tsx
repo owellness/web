@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import {
-  DOMAINS_IN_ORDER,
-  TOTAL_QUESTIONS,
-  TYPES,
-} from "@/application/owti";
+import { DOMAINS_IN_ORDER, TYPES } from "@/application/owti";
 import { buildBreadcrumbJsonLd } from "@/application/seo/jsonld";
 import { SITE_NAME, SITE_URL } from "@/config/site";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
@@ -20,7 +16,7 @@ export const revalidate = 3600;
 
 const OWTI_URL = `${SITE_URL}/owti`;
 const TITLE = "웰니스 유형 검사 · OWTI";
-const DESCRIPTION = `O! Wellness Type Indicator — 4개 영역(실천·몸·마음·연결)과 ${TOTAL_QUESTIONS}문항으로 알아보는 나의 웰니스 유형. 16가지 타입 중 지금 나에게 필요한 변화의 방향을 찾아보세요.`;
+const DESCRIPTION = `O! Wellness Type Indicator — 4개 영역(실천·몸·마음·연결)으로 알아보는 나의 웰니스 유형. 16가지 타입 중 지금 나에게 필요한 변화의 방향을 찾아보세요.`;
 const OG_IMAGE = `${SITE_URL}/api/og?title=${encodeURIComponent(
   "나의 웰니스 유형 검사",
 )}&category=${encodeURIComponent("O! Wellness Type")}`;
@@ -96,7 +92,7 @@ export default async function OwtiLandingPage() {
             </Link>
           </div>
           <p className="text-xs text-muted-foreground">
-            {TOTAL_QUESTIONS}문항 · 약 1~3분 소요 · 회원가입 불필요
+            약 1~3분 소요 · 회원가입 불필요
           </p>
         </div>
       </section>
@@ -130,7 +126,7 @@ export default async function OwtiLandingPage() {
           4개 핵심 영역 — AFCH
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          각 영역은 12개 문항으로 측정됩니다. 평균 3.5점 이상이면 강점(●), 미만이면
+          각 영역의 평균 점수로 측정됩니다. 평균 3.5점 이상이면 강점(●), 미만이면
           취약(○) 영역으로 분류돼요.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -351,10 +347,10 @@ export default async function OwtiLandingPage() {
             </p>
           </TrustCard>
 
-          <TrustCard title="48문항, 균형 있게 구성했습니다">
+          <TrustCard title="균형 있게 구성했습니다">
             <p>
-              4개 영역, 12개 하위 요소, 요소당 4문항. 심리측정학적 신뢰도 기준을
-              충족하는 구조입니다.
+              4개 영역과 12개 하위 요소를 고르게 다루어, 심리측정학적 신뢰도
+              기준을 충족하는 구조입니다.
               <Cite refs={[16]} />
             </p>
           </TrustCard>
@@ -382,7 +378,7 @@ export default async function OwtiLandingPage() {
             나의 웰니스 유형은?
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            지난 한 달을 떠올리며 {TOTAL_QUESTIONS}문항에 답해보세요. 결과는 기기에서
+            지난 한 달을 떠올리며 솔직하게 답해보세요. 결과는 기기에서
             바로 계산되며, 개별 응답은 저장되지 않습니다. 서비스 개선을 위한 익명
             통계(진행 단계·완료 유형)만 수집됩니다.
           </p>

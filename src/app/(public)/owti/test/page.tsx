@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { TOTAL_QUESTIONS } from "@/application/owti";
 import { SITE_NAME, SITE_URL } from "@/config/site";
 import { OwtiQuiz } from "@/presentation/components/public/owti/OwtiQuiz";
 
 export const metadata: Metadata = {
   title: "웰니스 유형 검사 진행",
-  description: `${TOTAL_QUESTIONS}문항에 답하고 나의 O! Wellness Type을 확인해보세요.`,
+  description: "지난 한 달을 기준으로 답하고 나의 O! Wellness Type을 확인해보세요.",
   alternates: { canonical: `${SITE_URL}/owti` },
   // The interactive form itself shouldn't be indexed — /owti is the canonical
   // landing page and /owti/result/[code] holds the indexable content.

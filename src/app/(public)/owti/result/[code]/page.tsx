@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import type { ArticleSummary } from "@/application/articles/model";
 import {
   ALL_CODES,
   DOMAIN_CATEGORY_SLUGS,
@@ -11,13 +12,14 @@ import {
 } from "@/application/owti";
 import { buildBreadcrumbJsonLd } from "@/application/seo/jsonld";
 import { SITE_NAME, SITE_URL } from "@/config/site";
+import { ArticleCard } from "@/presentation/components/public/ArticleCard";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
 import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDisclaimer";
 import { NewsletterCTA } from "@/presentation/components/public/NewsletterCTA";
 import { OwtiScoreBreakdown } from "@/presentation/components/public/owti/OwtiScoreBreakdown";
 import { OwtiShareCard } from "@/presentation/components/public/owti/OwtiShareCard";
 
-import { categoryService } from "@/composition";
+import { articleService, categoryService } from "@/composition";
 
 // Pre-render all 16 type pages at build; reject anything else with a 404.
 export const dynamicParams = false;
@@ -80,17 +82,53 @@ export default async function OwtiResultPage({
 
   const composition = parseCode(code);
 
-  // Recommend content for the type's weak (○) domains, intersected with the
-  // categories that actually exist right now.
+  // Recommend real articles to read next. Normally these target the type's weak
+  // (○) domains; a 웰니스 마스터 (no weak domains) instead gets maintenance picks
+  // drawn from every wellness area. We surface the articles directly rather than
+  // sending visitors to a category index.
   const cats = await categoryService.listAll().catch(() => []);
   const catBySlug = new Map(cats.map((c) => [c.slug, c]));
   const weakDomains = weakDomainsFromCode(code);
-  const recSlugs = [
-    ...new Set(weakDomains.flatMap((d) => DOMAIN_CATEGORY_SLUGS[d.key])),
-  ];
+  const isMaster = weakDomains.length === 0;
+  const recSlugs = isMaster
+    ? [...new Set(Object.values(DOMAIN_CATEGORY_SLUGS).flat())]
+    : [...new Set(weakDomains.flatMap((d) => DOMAIN_CATEGORY_SLUGS[d.key]))];
   const recCats = recSlugs
     .map((slug) => catBySlug.get(slug))
     .filter((c): c is NonNullable<typeof c> => Boolean(c));
+
+  // Pull a few published articles from each recommended category, then
+  // round-robin interleave so no single category dominates. Resilient to the DB
+  // being unavailable during static generation (each fetch degrades to []).
+  const RECS_PER_CATEGORY = 4;
+  const MAX_RECS = 6;
+  const perCategory = await Promise.all(
+    recCats.map((cat) =>
+      articleService
+        .list(
+          { categorySlug: cat.slug, status: "published" },
+          { limit: RECS_PER_CATEGORY },
+        )
+        .then((r) => r.items)
+        .catch(() => [] as ArticleSummary[]),
+    ),
+  );
+  const recArticles: ArticleSummary[] = [];
+  const seenArticleIds = new Set<string>();
+  for (let i = 0; recArticles.length < MAX_RECS; i++) {
+    let advanced = false;
+    for (const list of perCategory) {
+      const item = list[i];
+      if (!item) continue;
+      advanced = true;
+      if (!seenArticleIds.has(item.id)) {
+        seenArticleIds.add(item.id);
+        recArticles.push(item);
+        if (recArticles.length >= MAX_RECS) break;
+      }
+    }
+    if (!advanced) break;
+  }
 
   return (
     <>
@@ -181,40 +219,34 @@ export default async function OwtiResultPage({
             scores from the URL hash or the quiz's sessionStorage hand-off). */}
         <OwtiShareCard code={code} />
 
-        {/* Recommended content (weak domains) — or a "maintain" note when the
-            type has no weak domains at all (AFCH). */}
-        {weakDomains.length === 0 ? (
+        {/* Recommended content — actual articles to read next, shown directly
+            (no category step). Weak domains drive the picks; a 웰니스 마스터
+            (no weak domains) gets maintenance picks across every area. Falls
+            back to a "maintain" note for a master when no articles exist yet. */}
+        {recArticles.length > 0 ? (
+          <section className="mt-12">
+            <h2 className="text-xl font-semibold tracking-tight text-foreground">
+              {isMaster
+                ? "지금의 균형을 지켜주는 콘텐츠"
+                : "취약 영역에 도움이 되는 콘텐츠"}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {isMaster
+                ? `4개 영역이 모두 강점이에요. 지금의 균형을 유지하는 데 도움이 되는 ${SITE_NAME} 콘텐츠예요.`
+                : `${weakDomains.map((d) => d.name).join(" · ")} 영역을 끌어올리는 데 참고할 수 있는 ${SITE_NAME} 콘텐츠예요.`}
+            </p>
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              {recArticles.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          </section>
+        ) : isMaster ? (
           <section className="mt-12 rounded-2xl border border-accent/30 bg-accent/5 p-6">
             <p className="text-sm leading-relaxed text-foreground">
               4개 영역이 모두 강점이에요. 지금의 균형을 유지하면서, 완벽함보다{" "}
               <strong>지속성</strong>에 집중해보세요.
             </p>
-          </section>
-        ) : recCats.length > 0 ? (
-          <section className="mt-12">
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">
-              취약 영역에 도움이 되는 콘텐츠
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {weakDomains.map((d) => d.name).join(" · ")} 영역을 끌어올리는 데
-              참고할 수 있는 {SITE_NAME} 콘텐츠예요.
-            </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {recCats.map((cat) => (
-                <Link
-                  key={cat.slug}
-                  href={`/${cat.slug}`}
-                  className="group rounded-2xl border border-border bg-card p-5 transition hover:border-accent/40 hover:bg-muted/40"
-                >
-                  <p className="text-sm font-semibold text-card-foreground">
-                    {cat.name}
-                  </p>
-                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                    {cat.description}
-                  </p>
-                </Link>
-              ))}
-            </div>
           </section>
         ) : null}
 
