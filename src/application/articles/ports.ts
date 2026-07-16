@@ -49,4 +49,11 @@ export interface RevalidationPort {
   revalidateArticle(slug: string, categorySlug: string): Promise<void>;
   revalidateCategory(categorySlug: string): Promise<void>;
   revalidateHome(): Promise<void>;
+  /**
+   * Refreshes the site-wide indexes that enumerate every published article —
+   * /sitemap.xml, /llms.txt and /llms-full.txt. These are statically generated
+   * with a 10-minute ISR window, so without an explicit bust a newly published
+   * (or unpublished/deleted) article only shows up once that window elapses.
+   */
+  revalidateContentIndexes(): Promise<void>;
 }

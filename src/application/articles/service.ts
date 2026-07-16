@@ -99,6 +99,12 @@ export const createArticleService = ({
       readingTimeSec: rendered.readingTimeSec,
     });
 
+    // Site-wide indexes (sitemap.xml, llms.txt, llms-full.txt) list every
+    // published article and are ISR-cached, so refresh them on every save:
+    // publishing adds the URL and unpublishing removes it, either way the
+    // indexes must not lag behind by up to the 10-minute revalidate window.
+    await revalidation.revalidateContentIndexes();
+
     if (article.status === "published") {
       await Promise.all([
         revalidation.revalidateArticle(
@@ -133,6 +139,7 @@ export const createArticleService = ({
           article.primaryCategorySlug as CategorySlug,
         ),
         revalidation.revalidateHome(),
+        revalidation.revalidateContentIndexes(),
       ]);
     } catch (e) {
       console.warn("[articleService.delete] revalidation failed (ignored)", e);

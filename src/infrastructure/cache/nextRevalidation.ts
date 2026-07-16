@@ -12,4 +12,12 @@ export const nextRevalidation: RevalidationPort = {
   async revalidateHome() {
     revalidatePath("/");
   },
+  async revalidateContentIndexes() {
+    // sitemap.xml and the two llms.txt feeds each list every published article.
+    // Busting their ISR cache here makes a new/removed article appear right
+    // away instead of after the routes' 10-minute revalidate window.
+    revalidatePath("/sitemap.xml");
+    revalidatePath("/llms.txt");
+    revalidatePath("/llms-full.txt");
+  },
 };
