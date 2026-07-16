@@ -4,7 +4,13 @@ import { ALL_CODES } from "@/application/owti";
 import { articleService, categoryService, tagService } from "@/composition";
 import { SITE_URL } from "@/config/site";
 
-export const revalidate = 600;
+// Render the sitemap on-demand from the live database on every request.
+// sitemap routes are cached by default in Next.js, and that default bit us: a
+// stale ISR entry froze the sitemap for days so newly published articles never
+// showed up. This is a low-traffic, crawler-facing route, so the per-request DB
+// query is a cheap price for a sitemap that always reflects the current set of
+// published articles (and instantly backfills any previously missing ones).
+export const dynamic = "force-dynamic";
 
 const safe = async <T>(p: Promise<T>, fallback: T): Promise<T> =>
   p.catch((err) => {
