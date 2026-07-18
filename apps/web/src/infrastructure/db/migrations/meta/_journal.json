@@ -50,6 +50,13 @@
       "when": 1782652684549,
       "tag": "0006_freezing_fallen_one",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784411067166,
+      "tag": "0007_furry_cannonball",
+      "breakpoints": true
     }
   ]
 }
