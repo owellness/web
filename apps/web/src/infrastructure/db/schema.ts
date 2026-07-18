@@ -396,6 +396,36 @@ export const owtiEvents = pgTable(
 );
 
 // ─────────────────────────────────────────────────────────────
+// OWTI results — 로그인 사용자의 검사 결과 히스토리 (모바일 앱 API v1)
+// ─────────────────────────────────────────────────────────────
+
+// Scores are recomputed server-side from the raw answers with the shared
+// scoring logic (@owellness/shared/owti); answers are kept so a future
+// scoring revision can rescore history.
+export const owtiResults = pgTable(
+  "owti_results",
+  {
+    id: uuid("id").primaryKey().default(idDefault()),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // question id (1–48, string key) → Likert answer (1–5)
+    answers: jsonb("answers").notNull().$type<Record<string, number>>(),
+    // domain key → average score (1–5 float)
+    domainAverages: jsonb("domain_averages")
+      .notNull()
+      .$type<Record<string, number>>(),
+    typeCode: varchar("type_code", { length: 4 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .default(now()),
+  },
+  (t) => [
+    index("owti_results_user_created_idx").on(t.userId, t.createdAt.desc()),
+  ],
+);
+
+// ─────────────────────────────────────────────────────────────
 // Exports for the Auth.js Drizzle adapter binding (infrastructure/auth)
 // ─────────────────────────────────────────────────────────────
 

@@ -1,3 +1,4 @@
+import { createAppAuthService } from "@/application/appAuth/service";
 import { createArticleService } from "@/application/articles/service";
 import { createAuthorService } from "@/application/authors/service";
 import { createCategoryService } from "@/application/categories/service";
@@ -5,13 +6,16 @@ import { createFaqService } from "@/application/faq/service";
 import { createMediaService } from "@/application/media/service";
 import { createNewsletterService } from "@/application/newsletter/service";
 import { createOwtiAnalyticsService } from "@/application/owtiAnalytics/service";
+import { createOwtiResultService } from "@/application/owtiResults/service";
 import { createPageService } from "@/application/pages/service";
 import { createSearchService } from "@/application/search/service";
 import { createSettingsService } from "@/application/settings/service";
 import { createTagService } from "@/application/tags/service";
 import { SITE_NAME, SITE_URL } from "@/config/site";
 
+import { appJwtIssuer } from "@/infrastructure/auth/appJwt";
 import { hmacConfirmTokenSigner } from "@/infrastructure/auth/hmacTokens";
+import { kakaoOpenApiVerifier } from "@/infrastructure/auth/kakaoOpenApi";
 import { nextRevalidation } from "@/infrastructure/cache/nextRevalidation";
 import { tiptapCampaignRenderer } from "@/infrastructure/content/campaignHtmlRenderer";
 import { slugify } from "@/infrastructure/content/slug";
@@ -20,12 +24,14 @@ import {
   resendNewsletterBroadcaster,
   resendNewsletterMailer,
 } from "@/infrastructure/email/newsletterMailer";
+import { drizzleAppUserRepository } from "@/infrastructure/repositories/drizzleAppUserRepository";
 import { drizzleArticleRepository } from "@/infrastructure/repositories/drizzleArticleRepository";
 import { drizzleAuthorRepository } from "@/infrastructure/repositories/drizzleAuthorRepository";
 import { drizzleCampaignRepository } from "@/infrastructure/repositories/drizzleCampaignRepository";
 import { drizzleCategoryRepository } from "@/infrastructure/repositories/drizzleCategoryRepository";
 import { drizzleFaqRepository } from "@/infrastructure/repositories/drizzleFaqRepository";
 import { drizzleOwtiEventRepository } from "@/infrastructure/repositories/drizzleOwtiEventRepository";
+import { drizzleOwtiResultRepository } from "@/infrastructure/repositories/drizzleOwtiResultRepository";
 import { drizzlePageRepository } from "@/infrastructure/repositories/drizzlePageRepository";
 import { drizzleSettingsRepository } from "@/infrastructure/repositories/drizzleSettingsRepository";
 import { drizzleSubscriberRepository } from "@/infrastructure/repositories/drizzleSubscriberRepository";
@@ -81,3 +87,15 @@ export const newsletterService = createNewsletterService({
   buildUnsubscribeUrl: (token) =>
     `${SITE_URL}/api/newsletter/unsubscribe?token=${encodeURIComponent(token)}`,
 });
+
+// ── 모바일 앱 API v1 ─────────────────────────────────────────
+
+export const appAuthService = createAppAuthService({
+  verifier: kakaoOpenApiVerifier,
+  users: drizzleAppUserRepository,
+  tokens: appJwtIssuer,
+});
+
+export const owtiResultService = createOwtiResultService(
+  drizzleOwtiResultRepository,
+);
