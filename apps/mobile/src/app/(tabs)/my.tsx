@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { OwButton } from "@/design-system";
+import { colors, spacing } from "@/design-system/tokens";
 import {
   isKakaoConfigured,
   loginWithKakao,
   logoutFromKakao,
   type KakaoProfile,
 } from "@/features/auth/kakao";
-import { colors, radius, spacing } from "@/design-system/tokens";
 
 /**
  * 마이 탭 (디자인 2b) 스켈레톤 — 카카오 로그인 연동 데모.
@@ -53,24 +54,23 @@ export default function MyScreen() {
             <Text style={styles.profile}>
               {profile.nickname}님 (id: {profile.id})
             </Text>
-            <Pressable
-              style={[styles.button, styles.buttonSecondary]}
+            <OwButton
+              label="로그아웃"
+              variant="secondary"
               onPress={handleLogout}
               disabled={busy}
-            >
-              <Text style={styles.buttonSecondaryLabel}>로그아웃</Text>
-            </Pressable>
+              style={styles.button}
+            />
           </>
         ) : (
-          <Pressable
-            style={[styles.button, styles.buttonKakao]}
+          <OwButton
+            label={busy ? "로그인 중…" : "카카오로 로그인"}
+            variant="kakao"
             onPress={handleLogin}
             disabled={busy || !isKakaoConfigured}
-          >
-            <Text style={styles.buttonKakaoLabel}>
-              {busy ? "로그인 중…" : "카카오로 로그인"}
-            </Text>
-          </Pressable>
+            loading={busy}
+            style={styles.button}
+          />
         )}
 
         {!isKakaoConfigured && (
@@ -96,21 +96,7 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.ink, fontSize: 20, fontWeight: "700" },
   profile: { color: colors.textSecondary, fontSize: 15 },
-  button: {
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 14,
-    minWidth: 240,
-    alignItems: "center",
-  },
-  buttonKakao: { backgroundColor: "#FEE500" },
-  buttonKakaoLabel: { color: "#191919", fontSize: 15, fontWeight: "600" },
-  buttonSecondary: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  buttonSecondaryLabel: { color: colors.ink, fontSize: 15, fontWeight: "600" },
+  button: { minWidth: 240 },
   hint: {
     color: colors.textMuted,
     fontSize: 12.5,
