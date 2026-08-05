@@ -1,5 +1,6 @@
 import type { HtmlRenderer } from "@/application/articles/ports";
 import { validationFailed } from "@/application/shared/errors";
+import { formatZodError } from "@/application/shared/validationMessage";
 
 import { DEFAULT_PAGES } from "./defaults";
 import { sitePageInputSchema, type SitePage } from "./model";
@@ -63,7 +64,7 @@ export const createPageService = ({ repository, htmlRenderer }: PageServiceDeps)
 
   async save(slug: string, rawInput: unknown): Promise<SitePage> {
     const parsed = sitePageInputSchema.safeParse(rawInput);
-    if (!parsed.success) throw validationFailed(parsed.error.message);
+    if (!parsed.success) throw validationFailed(formatZodError(parsed.error));
 
     const { html } = await htmlRenderer.renderTiptapToHtml(parsed.data.bodyJson);
     return repository.upsert({

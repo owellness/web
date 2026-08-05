@@ -1,4 +1,5 @@
 import { validationFailed } from "@/application/shared/errors";
+import { formatZodError } from "@/application/shared/validationMessage";
 
 import {
   owtiEventInputSchema,
@@ -15,7 +16,7 @@ export const createOwtiAnalyticsService = (repo: OwtiEventRepository) => ({
    */
   async record(rawInput: unknown): Promise<void> {
     const parsed = owtiEventInputSchema.safeParse(rawInput);
-    if (!parsed.success) throw validationFailed(parsed.error.message);
+    if (!parsed.success) throw validationFailed(formatZodError(parsed.error));
     await repo.record(parsed.data);
   },
 

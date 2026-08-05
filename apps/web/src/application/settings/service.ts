@@ -1,4 +1,5 @@
 import { validationFailed } from "@/application/shared/errors";
+import { formatZodError } from "@/application/shared/validationMessage";
 
 import {
   DEFAULT_SETTINGS,
@@ -36,7 +37,7 @@ export const createSettingsService = (repo: SettingsRepository) => ({
 
   async update(rawInput: unknown): Promise<SiteSettings> {
     const parsed = settingsInputSchema.safeParse(rawInput);
-    if (!parsed.success) throw validationFailed(parsed.error.message);
+    if (!parsed.success) throw validationFailed(formatZodError(parsed.error));
     return repo.upsert({
       heroEyebrow: parsed.data.heroEyebrow,
       heroTitle: parsed.data.heroTitle,

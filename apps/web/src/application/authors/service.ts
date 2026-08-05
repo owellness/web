@@ -3,6 +3,7 @@ import {
   notFound,
   validationFailed,
 } from "@/application/shared/errors";
+import { formatZodError } from "@/application/shared/validationMessage";
 
 import { authorProfileSchema, type Author } from "./model";
 import type { AuthorRepository } from "./ports";
@@ -63,7 +64,7 @@ export const createAuthorService = ({
     const slug = slugify(typedSlug) || slugify(nameForSlug);
 
     const parsed = authorProfileSchema.safeParse({ ...raw, slug });
-    if (!parsed.success) throw validationFailed(parsed.error.message);
+    if (!parsed.success) throw validationFailed(formatZodError(parsed.error));
 
     const clash = await repository.findBySlug(parsed.data.slug);
     if (clash && clash.id !== id) {

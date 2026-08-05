@@ -4,10 +4,41 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 
 import type { Article, TiptapDocument } from "@/application/articles/model";
+import {
+  TLDR_MAX_LINE_LENGTH,
+  TLDR_MAX_LINES,
+} from "@/application/articles/model";
 import { uploadImage } from "@/presentation/lib/uploadImage";
 import { TiptapEditor } from "./TiptapEditor";
 
 const EMPTY_DOC: TiptapDocument = { type: "doc", content: [] };
+
+const splitTldr = (raw: string): string[] =>
+  raw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+/**
+ * 저장을 눌러야 알 수 있던 TL;DR 제약(줄당 길이·줄 수)을 미리 잡아준다.
+ * 문제가 없으면 null.
+ */
+const describeTldrProblem = (lines: string[]): string | null => {
+  const tooLong = lines
+    .map((line, i) => ({ no: i + 1, length: line.length }))
+    .filter((line) => line.length > TLDR_MAX_LINE_LENGTH);
+
+  if (tooLong.length > 0) {
+    const detail = tooLong
+      .map((line) => `${line.no}번째 줄 ${line.length}자`)
+      .join(", ");
+    return `TL;DR은 한 줄에 한 문장씩, 줄당 최대 ${TLDR_MAX_LINE_LENGTH}자예요. 문장을 줄바꿈으로 나눠주세요. (${detail})`;
+  }
+  if (lines.length > TLDR_MAX_LINES) {
+    return `TL;DR은 최대 ${TLDR_MAX_LINES}줄까지 넣을 수 있어요. (현재 ${lines.length}줄)`;
+  }
+  return null;
+};
 
 export type ArticleFormCategory = { slug: string; name: string };
 
@@ -50,6 +81,11 @@ export function ArticleForm({
   );
   const [ogImageUrl, setOgImageUrl] = useState(initial?.ogImageUrl ?? "");
   const [coverUploading, setCoverUploading] = useState(false);
+
+  const tldrLines = splitTldr(tldrText);
+  const tldrOverflow = tldrLines
+    .map((line, i) => ({ no: i + 1, length: line.length }))
+    .filter((line) => line.length > TLDR_MAX_LINE_LENGTH);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const handleCoverFile = (file: File | undefined) => {
@@ -68,16 +104,17 @@ export function ArticleForm({
   };
 
   const onSubmit = (formData: FormData, status: "draft" | "published") => {
+    const tldrLines = splitTldr(tldrText);
+    const tldrProblem = describeTldrProblem(tldrLines);
+    if (tldrProblem) {
+      setError(tldrProblem);
+      return;
+    }
+
+    setError(null);
     formData.set("status", status);
     formData.set("contentJson", JSON.stringify(contentJson));
-    formData.set(
-      "tldr",
-      tldrText
-        .split("\n")
-        .map((l) => l.trim())
-        .filter(Boolean)
-        .join("\n"),
-    );
+    formData.set("tldr", tldrLines.join("\n"));
     formData.set(
       "tagSlugs",
       tagText
@@ -162,8 +199,24 @@ export function ArticleForm({
             onChange={(e) => setTldrText(e.target.value)}
             rows={4}
             placeholder={"수면 부족은 단 1주만으로도 식욕 호르몬을 흐트러뜨립니다.\n수면 시간 7-9시간이 가장 안정적입니다."}
-            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-card-foreground outline-none focus:border-accent"
+            className={`mt-1 w-full rounded-lg border bg-card px-3 py-2 text-sm text-card-foreground outline-none focus:border-accent ${
+              tldrOverflow.length > 0 ? "border-red-400" : "border-border"
+            }`}
           />
+          <p
+            className={`mt-1 text-xs ${
+              tldrOverflow.length > 0 || tldrLines.length > TLDR_MAX_LINES
+                ? "text-red-600 dark:text-red-400"
+                : "text-muted-foreground"
+            }`}
+          >
+            {tldrLines.length}/{TLDR_MAX_LINES}줄 · 줄당 최대{" "}
+            {TLDR_MAX_LINE_LENGTH}자
+            {tldrOverflow.length > 0 &&
+              ` — ${tldrOverflow
+                .map((line) => `${line.no}번째 줄 ${line.length}자`)
+                .join(", ")}. 문장마다 줄바꿈으로 나눠주세요.`}
+          </p>
         </div>
 
         <div className="block">

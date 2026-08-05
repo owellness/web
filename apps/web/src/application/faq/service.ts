@@ -1,4 +1,5 @@
 import { notFound, validationFailed } from "@/application/shared/errors";
+import { formatZodError } from "@/application/shared/validationMessage";
 
 import { DEFAULT_FAQ_ITEMS } from "./defaults";
 import { faqItemInputSchema, type FaqItem } from "./model";
@@ -6,7 +7,7 @@ import type { FaqRepository } from "./ports";
 
 const parse = (rawInput: unknown) => {
   const parsed = faqItemInputSchema.safeParse(rawInput);
-  if (!parsed.success) throw validationFailed(parsed.error.message);
+  if (!parsed.success) throw validationFailed(formatZodError(parsed.error));
   return parsed.data;
 };
 

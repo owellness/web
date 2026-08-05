@@ -43,6 +43,11 @@ export type Article = ArticleSummary & {
   medicalReviewer: { slug: string; name: string } | null;
 };
 
+// TL;DR은 AEO 답변 박스로 노출되므로 한 줄이 스니펫 길이를 넘지 않아야 한다.
+// 폼(ArticleForm)도 같은 상수를 써서 저장 전에 미리 알려준다.
+export const TLDR_MAX_LINES = 6;
+export const TLDR_MAX_LINE_LENGTH = 160;
+
 export const articleInputSchema = z.object({
   // Present when editing an existing article — drives id-based UPDATE so a
   // slug change doesn't accidentally insert a new row.
@@ -57,7 +62,10 @@ export const articleInputSchema = z.object({
     ),
   title: z.string().min(1).max(200),
   excerpt: z.string().min(1).max(300),
-  tldr: z.array(z.string().min(1).max(160)).max(6).default([]),
+  tldr: z
+    .array(z.string().min(1).max(TLDR_MAX_LINE_LENGTH))
+    .max(TLDR_MAX_LINES)
+    .default([]),
   contentJson: tiptapDocumentSchema,
   status: z.enum(ARTICLE_STATUS).default("draft"),
   primaryCategorySlug: z.string().min(1).max(80),
