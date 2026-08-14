@@ -3,6 +3,7 @@ import {
   notFound,
   validationFailed,
 } from "@/application/shared/errors";
+import { formatZodError } from "@/application/shared/validationMessage";
 import {
   campaignInputSchema,
   subscribeInputSchema,
@@ -35,7 +36,7 @@ export const createNewsletterService = (deps: NewsletterServiceDeps) => ({
   async subscribe(rawInput: unknown): Promise<{ status: "pending" | "already_confirmed" }> {
     const parsed = subscribeInputSchema.safeParse(rawInput);
     if (!parsed.success) {
-      throw validationFailed(parsed.error.message);
+      throw validationFailed(formatZodError(parsed.error));
     }
     const input: SubscribeInput = parsed.data;
 
@@ -110,7 +111,7 @@ export const createNewsletterService = (deps: NewsletterServiceDeps) => ({
   /** Render + send a one-off test email to a single address (no DB record). */
   async sendTest(rawInput: unknown, to: string): Promise<void> {
     const parsed = campaignInputSchema.safeParse(rawInput);
-    if (!parsed.success) throw validationFailed(parsed.error.message);
+    if (!parsed.success) throw validationFailed(formatZodError(parsed.error));
     if (!to) throw validationFailed("테스트 수신 이메일이 없습니다.");
 
     const html = await deps.htmlRenderer.render(parsed.data.contentJson);
@@ -128,7 +129,7 @@ export const createNewsletterService = (deps: NewsletterServiceDeps) => ({
     createdById: string | null,
   ): Promise<Campaign> {
     const parsed = campaignInputSchema.safeParse(rawInput);
-    if (!parsed.success) throw validationFailed(parsed.error.message);
+    if (!parsed.success) throw validationFailed(formatZodError(parsed.error));
 
     const emails = await deps.repository.listConfirmedEmails();
     if (emails.length === 0) {

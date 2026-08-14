@@ -5,6 +5,7 @@ import {
   notFound,
   validationFailed,
 } from "@/application/shared/errors";
+import { formatZodError } from "@/application/shared/validationMessage";
 import { slugify } from "@/application/shared/slug";
 
 import { categoryInputSchema, type Category } from "./model";
@@ -43,7 +44,7 @@ export const createCategoryService = (repo: CategoryRepository) => ({
       slug: slugify(((rawInput ?? {}) as { slug?: string }).slug ?? "") ||
         slugify(((rawInput ?? {}) as { name?: string }).name ?? ""),
     });
-    if (!parsed.success) throw validationFailed(parsed.error.message);
+    if (!parsed.success) throw validationFailed(formatZodError(parsed.error));
 
     const existing = await repo.findBySlug(parsed.data.slug);
     if (existing) {
@@ -62,7 +63,7 @@ export const createCategoryService = (repo: CategoryRepository) => ({
         slugify(((rawInput ?? {}) as { slug?: string }).slug ?? "") ||
         slugify(((rawInput ?? {}) as { name?: string }).name ?? ""),
     });
-    if (!parsed.success) throw validationFailed(parsed.error.message);
+    if (!parsed.success) throw validationFailed(formatZodError(parsed.error));
 
     const existing = await repo.findBySlug(parsed.data.slug);
     if (existing && existing.id !== id) {

@@ -1,5 +1,6 @@
 import { type CategorySlug } from "@/config/site";
 import { notFound, validationFailed } from "@/application/shared/errors";
+import { formatZodError } from "@/application/shared/validationMessage";
 import type { Paginated, Pagination } from "@/application/shared/pagination";
 import { slugify } from "@/application/shared/slug";
 import { extractFirstImageUrl } from "@/application/seo/articleMeta";
@@ -82,7 +83,7 @@ export const createArticleService = ({
       slug: normalizedSlug,
     });
     if (!parsed.success) {
-      throw validationFailed(parsed.error.message);
+      throw validationFailed(formatZodError(parsed.error));
     }
     const input: ArticleInput = parsed.data;
 
