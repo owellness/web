@@ -17,7 +17,7 @@ import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDiscl
 import { NewsletterCTA } from "@/presentation/components/public/NewsletterCTA";
 import { resolveDefaultOgImage } from "@/presentation/lib/siteSettings";
 
-import { articleService, categoryService } from "@/composition";
+import { articleService, authorService, categoryService } from "@/composition";
 
 export const revalidate = 300;
 export const dynamicParams = true;
@@ -116,6 +116,13 @@ export default async function ArticlePage({
   if (article.primaryCategorySlug !== category) notFound();
   if (article.status !== "published") notFound();
 
+  // Keep the article byline in sync with the public author profile. If the
+  // profile lookup is temporarily unavailable, the article itself can still
+  // render with the author name already included in the article record.
+  const author = await authorService
+    .findBySlug(article.authorSlug)
+    .catch(() => null);
+
   const articleUrl = `${SITE_URL}/${article.primaryCategorySlug}/${article.slug}`;
 
   const isMedical = article.medicalReviewer !== null;
@@ -197,27 +204,73 @@ export default async function ArticlePage({
           <p className="text-lg leading-relaxed text-muted-foreground">
             {article.excerpt}
           </p>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border pt-4 text-sm text-muted-foreground">
-            <span>
-              by{" "}
+          <div className="border-y border-border py-5">
+            <div className="flex items-start gap-4">
               <Link
                 href={`/authors/${article.authorSlug}`}
-                className="font-medium text-foreground hover:text-accent"
+                aria-label={`${article.authorName} 저자 프로필 보기`}
+                className="shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
-                {article.authorName}
+                {author?.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={author.avatarUrl}
+                    alt={article.authorName}
+                    className="size-16 rounded-full border border-border object-cover"
+                  />
+                ) : (
+                  <span className="flex size-16 items-center justify-center rounded-full border border-border bg-muted text-lg font-semibold text-muted-foreground">
+                    {article.authorName.charAt(0)}
+                  </span>
+                )}
               </Link>
-            </span>
-            {article.publishedAt ? (
-              <time dateTime={article.publishedAt.toISOString()}>
-                {formatDate(article.publishedAt)}
-              </time>
-            ) : null}
-            <span>· {Math.max(1, Math.round(article.readingTimeSec / 60))}분 읽기</span>
-            {article.medicalReviewer ? (
+
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                  작성자
+                </p>
+                <Link
+                  href={`/authors/${article.authorSlug}`}
+                  className="mt-0.5 inline-block font-semibold text-foreground hover:text-accent"
+                >
+                  {article.authorName}
+                </Link>
+                {author?.credentials || author?.affiliation ? (
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {[author.credentials, author.affiliation]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                ) : null}
+                {author?.bio ? (
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {author.bio}
+                  </p>
+                ) : null}
+                <Link
+                  href={`/authors/${article.authorSlug}`}
+                  className="mt-2 inline-block text-sm font-medium text-accent hover:underline"
+                >
+                  프로필과 작성 글 보기 →
+                </Link>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border pt-4 text-sm text-muted-foreground">
+              {article.publishedAt ? (
+                <time dateTime={article.publishedAt.toISOString()}>
+                  {formatDate(article.publishedAt)}
+                </time>
+              ) : null}
               <span>
-                · 의료 검토: <strong>{article.medicalReviewer.name}</strong>
+                · {Math.max(1, Math.round(article.readingTimeSec / 60))}분 읽기
               </span>
-            ) : null}
+              {article.medicalReviewer ? (
+                <span>
+                  · 의료 검토: <strong>{article.medicalReviewer.name}</strong>
+                </span>
+              ) : null}
+            </div>
           </div>
         </header>
 
