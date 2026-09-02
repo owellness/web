@@ -83,6 +83,24 @@ pnpm dev
 - `pnpm db:push` — Neon에 스키마 적용
 - `pnpm db:studio` — Drizzle Studio
 - `pnpm db:seed` — 카테고리·FAQ·소개 페이지 시드
+- `pnpm --filter web cards:generate` — OWTI 16개 유형별 카드 이미지 재생성
+
+## OWTI 유형별 카드 이미지
+
+`apps/web/public/owti/cards/owti-<code>.jpg` — 16개 유형의 범용 홍보 카드(1080×1350,
+인스타그램 4:5)입니다. 결과 페이지에서 방문자가 받는 **개인** 공유 카드
+(`src/presentation/lib/owtiShareCard.ts`, 본인 점수 표시)와는 별개로, 운영자가
+마케팅·소셜용으로 쓰는 유형별 이미지입니다.
+
+유형 문구(`packages/shared/src/owti/types.ts`)나 카드 디자인이 바뀌면 재생성하세요:
+
+```bash
+# playwright-core는 브라우저를 내려받지 않으므로 설치된 Chrome/Edge를 지정
+CHROMIUM_PATH="/path/to/chrome" pnpm --filter web cards:generate
+```
+
+기본 출력은 JPEG(품질 0.92)로 16장 합계 약 1.2MB입니다. 무손실이 필요하면
+`CARD_FORMAT=png`(장당 약 1.2MB), 더 작게 하려면 `CARD_FORMAT=webp`를 쓰세요.
 
 ## SEO / AEO / GEO 체크리스트
 
