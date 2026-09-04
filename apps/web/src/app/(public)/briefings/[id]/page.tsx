@@ -30,6 +30,13 @@ const metadataDescription = (excerpt: string, body: string): string => {
   return value.length > 160 ? `${value.slice(0, 159).trim()}…` : value;
 };
 
+const summaryPreview = (value: string): string => {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  const characters = Array.from(normalized);
+  if (characters.length <= 320) return normalized;
+  return `${characters.slice(0, 319).join("").trimEnd()}…`;
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -81,6 +88,11 @@ export default async function BriefingPage({
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
+  const summarySource =
+    briefing.excerpt.trim() ||
+    translatedParagraphs[0] ||
+    "이 글은 RSS에 별도 소개문을 제공하지 않았습니다. 영문 원문에서 전체 내용을 확인해 주세요.";
+  const summary = summaryPreview(summarySource);
   const url = briefingUrl(briefing.id);
 
   return (
@@ -134,18 +146,20 @@ export default async function BriefingPage({
             {briefing.originalTitle}
           </p>
 
-          <div className="mt-8 rounded-2xl border border-accent/25 bg-accent/5 px-5 py-4 text-sm leading-relaxed text-muted-foreground">
-            <p className="font-medium text-foreground">
-              Papago 자동 번역 · 별도 의료 검수 없음
+          <section
+            className="mt-8 rounded-2xl border border-accent/25 bg-accent/5 px-5 py-4"
+            aria-labelledby="briefing-summary-title"
+          >
+            <h2
+              id="briefing-summary-title"
+              className="text-sm font-semibold text-foreground"
+            >
+              글 본문 3줄 요약
+            </h2>
+            <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+              {summary}
             </p>
-            <p className="mt-1">
-              {hasTranslatedBody
-                ? "RSS로 제공된 본문을 기계 번역했으며, 긴 글은 피드 앞부분 최대 24,000자까지만 표시될 수 있습니다. "
-                : "RSS 본문이 아직 제공되지 않아 소개문을 기계 번역했습니다. "}
-              의미가 불분명하거나 건강 관련 결정을 내릴 때는 영문 원문과
-              전문가의 조언을 우선해 주세요.
-            </p>
-          </div>
+          </section>
         </header>
 
         <section className="mt-10" aria-labelledby="translated-content-title">
@@ -180,9 +194,14 @@ export default async function BriefingPage({
             영문 원문 읽기 <span aria-hidden="true">↗</span>
           </a>
           <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-            이 번역은 원문을 대체하지 않으며 출처와의 제휴·보증을 의미하지
-            않습니다. 콘텐츠의 권리는 각 원저작권자에게 있습니다. 원문의 최신
-            수정 사항은 번역문에 즉시 반영되지 않을 수 있습니다.
+            Papago 자동 번역이며 별도 의료 검수를 거치지 않았습니다. 이 번역은
+            원문을 대체하지 않으며 출처와의 제휴·보증을 의미하지 않습니다.
+            콘텐츠의 권리는 각 원저작권자에게 있습니다. 원문의 최신 수정 사항은
+            번역문에 즉시 반영되지 않을 수 있습니다. {hasTranslatedBody
+              ? "RSS로 제공된 본문은 피드 앞부분 최대 24,000자까지만 표시될 수 있습니다. "
+              : "RSS 본문이 제공되지 않아 소개문만 번역했습니다. "}
+            의미가 불분명하거나 건강 관련 결정을 내릴 때는 영문 원문과 전문가의
+            조언을 우선해 주세요.
           </p>
         </div>
       </article>
