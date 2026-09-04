@@ -3,6 +3,7 @@ import { createArticleService } from "@/application/articles/service";
 import { createAuthorService } from "@/application/authors/service";
 import { createCategoryService } from "@/application/categories/service";
 import { createFaqService } from "@/application/faq/service";
+import { createExternalContentService } from "@/application/externalContent/service";
 import { createMediaService } from "@/application/media/service";
 import { createNewsletterService } from "@/application/newsletter/service";
 import { createOwtiAnalyticsService } from "@/application/owtiAnalytics/service";
@@ -20,6 +21,9 @@ import { nextRevalidation } from "@/infrastructure/cache/nextRevalidation";
 import { tiptapCampaignRenderer } from "@/infrastructure/content/campaignHtmlRenderer";
 import { slugify } from "@/infrastructure/content/slug";
 import { tiptapHtmlRenderer } from "@/infrastructure/content/tiptapHtmlRenderer";
+import { papagoTranslator } from "@/infrastructure/contentIngestion/papagoTranslator";
+import { rssFeedReader } from "@/infrastructure/contentIngestion/rssFeedReader";
+import { externalFeedSources } from "@/infrastructure/contentIngestion/sources";
 import {
   resendNewsletterBroadcaster,
   resendNewsletterMailer,
@@ -30,6 +34,7 @@ import { drizzleAuthorRepository } from "@/infrastructure/repositories/drizzleAu
 import { drizzleCampaignRepository } from "@/infrastructure/repositories/drizzleCampaignRepository";
 import { drizzleCategoryRepository } from "@/infrastructure/repositories/drizzleCategoryRepository";
 import { drizzleFaqRepository } from "@/infrastructure/repositories/drizzleFaqRepository";
+import { drizzleExternalContentRepository } from "@/infrastructure/repositories/drizzleExternalContentRepository";
 import { drizzleOwtiEventRepository } from "@/infrastructure/repositories/drizzleOwtiEventRepository";
 import { drizzleOwtiResultRepository } from "@/infrastructure/repositories/drizzleOwtiResultRepository";
 import { drizzlePageRepository } from "@/infrastructure/repositories/drizzlePageRepository";
@@ -51,6 +56,14 @@ export const articleService = createArticleService({
 export const categoryService = createCategoryService(drizzleCategoryRepository);
 
 export const faqService = createFaqService(drizzleFaqRepository);
+
+export const externalContentService = createExternalContentService({
+  sources: externalFeedSources,
+  feedReader: rssFeedReader,
+  translator: papagoTranslator,
+  repository: drizzleExternalContentRepository,
+  revalidation: nextRevalidation,
+});
 
 export const owtiAnalyticsService = createOwtiAnalyticsService(
   drizzleOwtiEventRepository,
