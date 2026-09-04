@@ -192,6 +192,79 @@ export const articleTags = pgTable(
 );
 
 // ─────────────────────────────────────────────────────────────
+// Domain: translated external wellness briefings
+// ─────────────────────────────────────────────────────────────
+
+export const externalContentStatus = pgEnum("external_content_status", [
+  "rights_pending",
+  "pending_translation",
+  "published",
+  "failed",
+  "withdrawn",
+]);
+
+export const externalContentItems = pgTable(
+  "external_content_items",
+  {
+    id: uuid("id").primaryKey().default(idDefault()),
+    sourceKey: varchar("source_key", { length: 40 }).notNull(),
+    sourceName: varchar("source_name", { length: 120 }).notNull(),
+    externalId: varchar("external_id", { length: 500 }).notNull(),
+    sourceUrl: text("source_url").notNull(),
+    sourceAuthor: varchar("source_author", { length: 200 }),
+    sourcePublishedAt: timestamp("source_published_at", {
+      withTimezone: true,
+    }).notNull(),
+    originalTitle: text("original_title").notNull(),
+    originalExcerpt: text("original_excerpt").notNull().default(""),
+    translatedTitle: text("translated_title"),
+    translatedExcerpt: text("translated_excerpt"),
+    contentHash: varchar("content_hash", { length: 64 }).notNull(),
+    status: externalContentStatus("status")
+      .notNull()
+      .default("rights_pending"),
+    translationProvider: varchar("translation_provider", { length: 40 }),
+    translationError: varchar("translation_error", { length: 120 }),
+    translatedAt: timestamp("translated_at", { withTimezone: true }),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true })
+      .notNull()
+      .default(now()),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true })
+      .notNull()
+      .default(now()),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(now()),
+  },
+  (t) => [
+    uniqueIndex("external_content_source_external_uidx").on(
+      t.sourceKey,
+      t.externalId,
+    ),
+    uniqueIndex("external_content_source_url_uidx").on(t.sourceUrl),
+    index("external_content_status_published_idx").on(
+      t.status,
+      t.sourcePublishedAt.desc(),
+    ),
+  ],
+);
+
+export const externalFeedStates = pgTable("external_feed_states", {
+  sourceKey: varchar("source_key", { length: 40 }).primaryKey(),
+  etag: text("etag"),
+  lastModified: text("last_modified"),
+  lastAttemptAt: timestamp("last_attempt_at", { withTimezone: true }),
+  lastSuccessAt: timestamp("last_success_at", { withTimezone: true }),
+  lastError: varchar("last_error", { length: 120 }),
+  consecutiveFailures: integer("consecutive_failures").notNull().default(0),
+  leaseToken: varchar("lease_token", { length: 36 }),
+  leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .default(now()),
+});
+
+// ─────────────────────────────────────────────────────────────
 // Domain: FAQ items
 // ─────────────────────────────────────────────────────────────
 

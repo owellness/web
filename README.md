@@ -57,7 +57,7 @@ pnpm dev
 
 ## Vercel 배포
 
-1. Vercel에서 이 저장소를 import (Framework: Next.js 자동 감지)
+1. Vercel에서 이 저장소를 import하고 프로젝트 Root Directory를 `apps/web`으로 설정
 2. **Neon Postgres** 통합 추가 → `DATABASE_URL`, `DATABASE_URL_UNPOOLED` 자동 주입
 3. **Resend** 계정 생성 후 API key 발급 → 환경변수로 등록 (뉴스레터용)
 4. 환경변수 추가 (`.env.example` 참고):
@@ -74,6 +74,69 @@ pnpm dev
    Vercel CLI에서 마이그레이션을 한 번 실행
 7. `pnpm db:seed`로 카테고리 4개 시드
 8. `/admin/login`에서 관리자 로그인 → `/admin/articles/new`에서 첫 글 발행
+
+## 해외 웰니스 브리핑 자동 번역
+
+홈 화면의 `Global Wellness Briefing`은 NutritionFacts.org, Gowing Life,
+Global Wellness Institute의 공식 RSS에서 최신 글을 하루 한 번 수집합니다.
+원문 전체나 이미지를 복제하지 않고 제목·RSS 소개문·출처·날짜·원문 링크만
+저장하며, Papago로 번역된 항목만 공개합니다. 피드 요청은 ETag와
+Last-Modified를 사용하고 출처별 실패를 격리합니다.
+
+운영 설정:
+
+1. `pnpm --filter web db:migrate`로 `external_content_items`,
+   `external_feed_states`를 생성. Neon SQL Editor를 쓰는 경우에는 대신
+   `apps/web/migrate-0007-external-content.sql`만 실행
+2. Vercel에 별도의 강한 `CRON_SECRET`, `PAPAGO_CLIENT_ID`,
+   `PAPAGO_CLIENT_SECRET` 등록
+3. 출처별 번역·재게시 허락을 확인한 뒤에만
+   `EXTERNAL_TRANSLATION_ALLOWED_SOURCES`에 쉼표로 키 추가
+   (`nutritionfacts`, `gowinglife`, `gwi`)
+4. 배포하면 `apps/web/vercel.json`의 Vercel Cron이 매일 01:00 UTC
+   (한국 시간 10:00)에 `/api/cron/wellness-feeds`를 호출
+
+Papago Text Translation은 제목과 소개문을 각각 영어에서 한국어로
+번역합니다. 화면에는 정책에 따라 `Papago 번역` 표기와 Papago 링크를
+노출합니다. 번역 공급자를 변경하면 기존 공급자로 번역된 항목은 다음
+동기화에서 숨김·재번역되며, Papago 번역이 완료된 항목만 다시 공개됩니다.
+
+환경변수가 비어 있거나 허락 목록에서 빠진 출처는 원문을 수집하더라도
+`rights_pending` 상태로만 보관되고 홈페이지에는 노출되지 않습니다. 허락을
+철회해 목록에서 제거하면 다음 동기화에서 기존 번역도 자동으로 숨겨집니다.
+허용 목록에 키를 넣는 것은 해당 피드 전체에 대한 번역·재게시 권한과 필요한
+저작자·라이선스 표시 조건을 운영자가 확인했다는 의미입니다.
+
+최초 배포 후 Vercel Cron을 기다리지 않고 확인하려면 `CRON_SECRET`을 Bearer
+토큰으로 넣어 `GET /api/cron/wellness-feeds`를 한 번 호출하세요. 응답이 503이면
+Vercel Function 로그의 출처별 `errorCode`를 확인하고, 아래 쿼리로 최근 상태를
+점검할 수 있습니다.
+
+```sql
+SELECT source_key, last_success_at, last_error, consecutive_failures
+FROM external_feed_states
+ORDER BY source_key;
+```
+
+원출처가 글을 철회했거나 권리자가 삭제를 요청하면 해당 원문 URL을 기준으로
+영구 숨김 처리합니다. DB에는 즉시 반영되고 홈페이지 ISR 캐시에서는 최대
+5분 안에 사라집니다. `withdrawn` 항목은 이후 RSS에 다시 나타나도 자동
+재게시되지 않습니다.
+
+```sql
+UPDATE external_content_items
+SET status = 'withdrawn',
+    translated_title = NULL,
+    translated_excerpt = NULL,
+    updated_at = now()
+WHERE source_url = 'https://original.example/article';
+```
+
+> 번역은 원 저작물의 2차적 이용에 해당할 수 있으므로 기본값은 세 출처 모두
+> 비활성입니다. NutritionFacts.org의 일부 자체 제작물에는 CC BY-NC 4.0이
+> 표시되지만 비상업성·저작자·라이선스 링크·변경 고지와 개별 권리 확인이
+> 필요합니다. 이 자동화는 피드 전체를 처리하므로 세 출처 모두 피드 단위의
+> 서면 허락 또는 법률 검토된 이용 근거와 표시 문구를 확정한 뒤 활성화하세요.
 
 ## 주요 스크립트
 

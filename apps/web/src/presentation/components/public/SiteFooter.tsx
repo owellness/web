@@ -56,7 +56,9 @@ export async function SiteFooter() {
       </div>
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col justify-between gap-2 px-4 py-4 text-xs text-muted-foreground sm:flex-row sm:px-6">
-          <p>© {year} {SITE_NAME}. All rights reserved.</p>
+          <p>
+            © {year} {SITE_NAME}. 자체 제작 콘텐츠에 한해 All rights reserved.
+          </p>
           <p>
             본 사이트의 콘텐츠는 의학적 조언을 대체하지 않으며 정보 제공만을
             목적으로 합니다.

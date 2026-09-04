@@ -8,8 +8,13 @@ import {
 import { DEFAULT_SETTINGS } from "@/application/settings/model";
 import { SITE_CONFIG, SITE_URL } from "@/config/site";
 import { JsonLd } from "@/presentation/components/public/JsonLd";
+import { ExternalContentSection } from "@/presentation/components/public/ExternalContentSection";
 
-import { categoryService, settingsService } from "@/composition";
+import {
+  categoryService,
+  externalContentService,
+  settingsService,
+} from "@/composition";
 
 export const revalidate = 300; // ISR every 5 min
 
@@ -23,9 +28,10 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [cats, settings] = await Promise.all([
+  const [cats, settings, externalItems] = await Promise.all([
     categoryService.listAll().catch(() => []),
     settingsService.get().catch(() => DEFAULT_SETTINGS),
+    externalContentService.listPublished(6).catch(() => []),
   ]);
   return (
     <>
@@ -91,6 +97,8 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <ExternalContentSection items={externalItems} />
 
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">

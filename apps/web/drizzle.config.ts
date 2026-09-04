@@ -1,10 +1,13 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
+
+config({ path: ".env.local" });
+config();
 
 // `generate` only needs the schema; push/migrate/studio talk to the DB.
 const url =
-  process.env.DATABASE_URL_UNPOOLED ??
-  process.env.DATABASE_URL ??
+  process.env.DATABASE_URL_UNPOOLED?.trim() ||
+  process.env.DATABASE_URL?.trim() ||
   "postgres://placeholder@localhost/placeholder";
 
 export default defineConfig({
