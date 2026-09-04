@@ -17,6 +17,7 @@ import { JsonLd } from "@/presentation/components/public/JsonLd";
 import { MedicalDisclaimer } from "@/presentation/components/public/MedicalDisclaimer";
 import { NewsletterCTA } from "@/presentation/components/public/NewsletterCTA";
 import { OwtiScoreBreakdown } from "@/presentation/components/public/owti/OwtiScoreBreakdown";
+import { OwtiResultArrival } from "@/presentation/components/public/owti/OwtiResultArrival";
 import { OwtiShareCard } from "@/presentation/components/public/owti/OwtiShareCard";
 
 import { articleService, categoryService } from "@/composition";
@@ -141,6 +142,7 @@ export default async function OwtiResultPage({
       />
 
       <article className="mx-auto max-w-3xl px-4 pb-20 pt-10 sm:px-6">
+        <OwtiResultArrival code={code} />
         <nav
           aria-label="breadcrumb"
           className="mb-6 text-sm text-muted-foreground"

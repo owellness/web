@@ -1,8 +1,10 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Kakao, { type KakaoProfile } from "next-auth/providers/kakao";
 
 import { createCredentialPolicy, type AuthRole } from "@/application/auth/policy";
 import { ensureAdminUser } from "@/infrastructure/auth/adminUser";
+import { drizzleAppUserRepository } from "@/infrastructure/repositories/drizzleAppUserRepository";
 
 // Augment Auth.js types with our role.
 declare module "next-auth" {
@@ -63,16 +65,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+    Kakao({
+      async profile(profile: KakaoProfile) {
+        const kakaoId = String(profile.id);
+        const nickname = profile.kakao_account?.profile?.nickname ?? null;
+        const email = profile.kakao_account?.email ?? null;
+        const user = await drizzleAppUserRepository.upsertKakaoUser({
+          kakaoId,
+          nickname,
+          email,
+        });
+
+        return {
+          id: user.id,
+          name: user.name ?? nickname,
+          email: email ?? `kakao-${kakaoId}@users.noreply.owellness.kr`,
+          image: profile.kakao_account?.profile?.profile_image_url ?? null,
+          role: "viewer" as const,
+        };
+      },
+    }),
   ],
   pages: {
     signIn: "/admin/login",
-    error: "/admin/login",
+    error: "/owti/test?authError=1",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
-        token.role = (user as { role?: AuthRole }).role ?? "admin";
+        token.role =
+          (user as { role?: AuthRole }).role ??
+          (account?.provider === "credentials" ? "admin" : "viewer");
       }
       return token;
     },

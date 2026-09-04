@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 import {
   computeResult,
@@ -13,8 +14,11 @@ import {
   TOTAL_QUESTIONS,
 } from "@/application/owti";
 import { trackOwtiEvent } from "@/presentation/lib/owtiTracking";
+import {
+  OWTI_ANSWERS_STORAGE_KEY,
+  OWTI_LOGIN_PENDING_STORAGE_KEY,
+} from "@/presentation/lib/owtiStorage";
 
-const STORAGE_KEY = "owti-answers-v1";
 const STARTED_KEY = "owti-started";
 
 type AnswerMap = Record<number, number>;
@@ -25,7 +29,7 @@ const EMPTY: AnswerMap = {};
 function readStored(): AnswerMap {
   if (typeof window === "undefined") return {};
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = sessionStorage.getItem(OWTI_ANSWERS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as AnswerMap;
       if (parsed && typeof parsed === "object") return parsed;
@@ -48,13 +52,21 @@ function useHydrated(): boolean {
   );
 }
 
-export function OwtiQuiz() {
+export function OwtiQuiz({
+  isAuthenticated,
+  resumeAtLastStep = false,
+}: {
+  isAuthenticated: boolean;
+  resumeAtLastStep?: boolean;
+}) {
   const router = useRouter();
   const topRef = useRef<HTMLDivElement>(null);
 
   // Lazily seeded from storage so a mid-quiz refresh doesn't wipe progress.
   const [answers, setAnswers] = useState<AnswerMap>(readStored);
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(
+    resumeAtLastStep ? DOMAINS_IN_ORDER.length - 1 : 0,
+  );
   const [submitting, setSubmitting] = useState(false);
   const [showIncomplete, setShowIncomplete] = useState(false);
 
@@ -83,7 +95,10 @@ export function OwtiQuiz() {
   // Persist on change (no setState → not an effect-setState violation).
   useEffect(() => {
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+      sessionStorage.setItem(
+        OWTI_ANSWERS_STORAGE_KEY,
+        JSON.stringify(answers),
+      );
     } catch {
       /* storage full/disabled — just no persistence */
     }
@@ -117,14 +132,13 @@ export function OwtiQuiz() {
     scrollToTop();
   };
 
-  const finish = () => {
+  const finish = async () => {
     setSubmitting(true);
     try {
       const result = computeResult(answers);
       const encoded = encodeAverages(result.scores);
       trackOwtiEvent({ type: "complete", code: result.code });
       try {
-        sessionStorage.removeItem(STORAGE_KEY);
         // Reliable hand-off to the result page (the URL hash alone can be lost
         // across a client-side navigation). Keyed by code so it can't be
         // mistaken for someone else's result on a different type page.
@@ -135,7 +149,30 @@ export function OwtiQuiz() {
       } catch {
         /* storage disabled — the hash below still covers most cases */
       }
-      router.push(`/owti/result/${result.code}#${encoded}`);
+
+      const resultPath = `/owti/result/${result.code}#${encoded}`;
+      if (!isAuthenticated) {
+        try {
+          // Keep the answers through the OAuth round trip. The result page
+          // removes them only after Kakao successfully redirects back.
+          sessionStorage.setItem(
+            OWTI_LOGIN_PENDING_STORAGE_KEY,
+            result.code,
+          );
+        } catch {
+          /* storage disabled — the URL hash still carries the score */
+        }
+        await signIn("kakao", { redirectTo: resultPath });
+        return;
+      }
+
+      try {
+        sessionStorage.removeItem(OWTI_ANSWERS_STORAGE_KEY);
+        sessionStorage.removeItem(OWTI_LOGIN_PENDING_STORAGE_KEY);
+      } catch {
+        /* storage disabled — nothing to clean up */
+      }
+      router.push(resultPath);
     } catch {
       setSubmitting(false);
       setShowIncomplete(true);
@@ -148,7 +185,7 @@ export function OwtiQuiz() {
       return;
     }
     if (isLast) {
-      finish();
+      void finish();
       return;
     }
     // Funnel: record finishing this domain step (1-based), once each.
@@ -265,6 +302,15 @@ export function OwtiQuiz() {
       ) : null}
 
       {/* Nav */}
+      {isLast && !isAuthenticated ? (
+        <div className="mt-8 rounded-2xl border border-[#FEE500]/70 bg-[#FEE500]/10 p-4 text-sm leading-relaxed text-foreground">
+          <p className="font-medium">결과 확인에는 카카오 로그인이 필요해요.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            답변은 이 브라우저에서만 계산되며 서버에 저장되지 않습니다.
+          </p>
+        </div>
+      ) : null}
+
       <div className="mt-8 flex items-center justify-between gap-3">
         <button
           type="button"
@@ -278,11 +324,39 @@ export function OwtiQuiz() {
           type="button"
           onClick={goNext}
           disabled={submitting}
-          className="rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-50"
+          className={[
+            "inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-medium transition hover:opacity-90 disabled:opacity-50",
+            isLast && !isAuthenticated
+              ? "bg-[#FEE500] text-[#191919]"
+              : "bg-foreground text-background",
+          ].join(" ")}
         >
-          {submitting ? "결과 계산 중…" : isLast ? "결과 보기" : "다음"}
+          {isLast && !isAuthenticated && !submitting ? (
+            <KakaoIcon />
+          ) : null}
+          {submitting
+            ? isLast && !isAuthenticated
+              ? "카카오로 이동 중…"
+              : "결과 계산 중…"
+            : isLast && !isAuthenticated
+              ? "카카오로 로그인하고 결과 보기"
+              : isLast
+                ? "결과 보기"
+                : "다음"}
         </button>
       </div>
     </div>
+  );
+}
+
+function KakaoIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="size-4 shrink-0 fill-current"
+    >
+      <path d="M12 3C6.48 3 2 6.58 2 11c0 2.87 1.9 5.39 4.76 6.8l-.97 3.56a.5.5 0 0 0 .76.55l4.25-2.82c.39.04.79.06 1.2.06 5.52 0 10-3.58 10-8S17.52 3 12 3Z" />
+    </svg>
   );
 }

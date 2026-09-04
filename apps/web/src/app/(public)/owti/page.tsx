@@ -92,7 +92,7 @@ export default async function OwtiLandingPage() {
             </Link>
           </div>
           <p className="text-xs text-muted-foreground">
-            약 1~3분 소요 · 회원가입 불필요
+            약 1~3분 소요 · 결과 확인 시 카카오 로그인
           </p>
         </div>
       </section>
@@ -357,8 +357,8 @@ export default async function OwtiLandingPage() {
 
           <TrustCard title="응답은 저장되지 않습니다">
             <p>
-              모든 계산은 기기 안에서 이루어집니다. 회원가입 없이 시작할 수
-              있습니다.
+              모든 계산은 기기 안에서 이루어집니다. 검사는 로그인 없이 시작할 수
+              있고, 결과 확인 단계에서만 카카오 로그인을 요청합니다.
             </p>
           </TrustCard>
 
@@ -379,8 +379,9 @@ export default async function OwtiLandingPage() {
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             지난 한 달을 떠올리며 솔직하게 답해보세요. 결과는 기기에서
-            바로 계산되며, 개별 응답은 저장되지 않습니다. 서비스 개선을 위한 익명
-            통계(진행 단계·완료 유형)만 수집됩니다.
+            바로 계산되며, 확인하려면 카카오 로그인이 필요합니다. 개별 응답은
+            저장되지 않고 서비스 개선을 위한 익명 통계(진행 단계·완료 유형)만
+            수집됩니다.
           </p>
           <Link
             href="/owti/test"

@@ -9,7 +9,7 @@
 - **Next.js 16** (App Router) + TypeScript + React 19
 - **Tailwind CSS v4** + shadcn/ui 스타일 디자인 토큰 + Pretendard 폰트
 - **Neon Postgres** + **Drizzle ORM**
-- **Auth.js v5** + Credentials(아이디/비밀번호) 어드민 인증 (JWT 세션)
+- **Auth.js v5** + Credentials 어드민 인증 + Kakao 사용자 인증 (JWT 세션)
 - **Tiptap** WYSIWYG 에디터
 - **Resend** 이메일 (뉴스레터)
 - **Vercel** 호스팅 + Vercel Blob (예정)
@@ -63,15 +63,17 @@ pnpm dev
 4. 환경변수 추가 (`.env.example` 참고):
    - `AUTH_SECRET` — `openssl rand -base64 32`로 생성
    - `AUTH_URL` — 배포 URL (예: `https://oh-wellness.vercel.app`)
+   - `AUTH_KAKAO_ID` / `AUTH_KAKAO_SECRET` — Kakao Developers의 REST API 키·Client Secret
    - `ADMIN_USERNAME` / `ADMIN_PASSWORD` — 어드민 로그인 아이디·비밀번호
    - (선택) `ADMIN_NAME` / `ADMIN_EMAIL` — 글 작성자 표시용
    - `RESEND_API_KEY`, `RESEND_FROM` — 뉴스레터 발송
    - `NEXT_PUBLIC_SITE_URL` — 배포 URL
    - `NEWSLETTER_CONFIRM_SECRET` — `openssl rand -base64 32`로 생성
-5. 배포 후 `pnpm db:push` (로컬에서 production DATABASE_URL 사용) 또는
+5. Kakao Developers의 Redirect URI에 `{AUTH_URL}/api/auth/callback/kakao` 등록
+6. 배포 후 `pnpm db:push` (로컬에서 production DATABASE_URL 사용) 또는
    Vercel CLI에서 마이그레이션을 한 번 실행
-6. `pnpm db:seed`로 카테고리 4개 시드
-7. `/admin/login`에서 관리자 로그인 → `/admin/articles/new`에서 첫 글 발행
+7. `pnpm db:seed`로 카테고리 4개 시드
+8. `/admin/login`에서 관리자 로그인 → `/admin/articles/new`에서 첫 글 발행
 
 ## 주요 스크립트
 

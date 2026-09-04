@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SITE_NAME, SITE_URL } from "@/config/site";
+import { auth } from "@/infrastructure/auth/authConfig";
 import { OwtiQuiz } from "@/presentation/components/public/owti/OwtiQuiz";
 
 export const metadata: Metadata = {
@@ -13,7 +14,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export default function OwtiTestPage() {
+export default async function OwtiTestPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ authError?: string }>;
+}) {
+  const [session, query] = await Promise.all([auth(), searchParams]);
+  const hasAuthError = query.authError === "1";
+
   return (
     <section className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
       <nav aria-label="breadcrumb" className="mb-6 text-sm text-muted-foreground">
@@ -38,14 +46,28 @@ export default function OwtiTestPage() {
         </p>
       </header>
 
+      {hasAuthError ? (
+        <p
+          role="alert"
+          className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-300"
+        >
+          카카오 로그인을 완료하지 못했어요. 답변은 그대로 남아 있으니 다시
+          시도해주세요.
+        </p>
+      ) : null}
+
       <div className="mt-6">
-        <OwtiQuiz />
+        <OwtiQuiz
+          isAuthenticated={Boolean(session?.user)}
+          resumeAtLastStep={hasAuthError}
+        />
       </div>
 
       <p className="mt-10 text-center text-xs leading-relaxed text-muted-foreground">
         {SITE_NAME}의 OWTI 검사는 정보 제공을 목적으로 하며, 의학적 진단을
-        대체하지 않습니다. 개별 응답은 저장되지 않으며, 서비스 개선을 위한 익명
-        통계(진행 단계·완료 유형)만 수집됩니다.
+        대체하지 않습니다. 결과 확인에는 카카오 로그인이 필요하지만 개별 응답은
+        저장되지 않으며, 서비스 개선을 위한 익명 통계(진행 단계·완료 유형)만
+        수집됩니다.
       </p>
     </section>
   );

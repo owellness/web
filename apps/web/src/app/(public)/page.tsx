@@ -85,7 +85,7 @@ export default async function HomePage() {
                 무료로 검사 시작하기
               </Link>
               <span className="text-xs text-muted-foreground">
-                약 1~3분 · 회원가입 불필요
+                약 1~3분 · 결과 확인 시 카카오 로그인
               </span>
             </div>
           </div>
