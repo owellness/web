@@ -88,7 +88,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   pages: {
     signIn: "/admin/login",
-    error: "/owti/test?authError=1",
+    // Auth.js appends its own `?error=...` query string. Keeping this URL
+    // query-free avoids malformed redirects such as `?authError=1?error=...`.
+    error: "/owti/test",
   },
   callbacks: {
     async jwt({ token, user, account }) {

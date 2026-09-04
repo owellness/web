@@ -17,10 +17,10 @@ export const metadata: Metadata = {
 export default async function OwtiTestPage({
   searchParams,
 }: {
-  searchParams: Promise<{ authError?: string }>;
+  searchParams: Promise<{ authError?: string; error?: string }>;
 }) {
   const [session, query] = await Promise.all([auth(), searchParams]);
-  const hasAuthError = query.authError === "1";
+  const hasAuthError = query.authError === "1" || Boolean(query.error);
 
   return (
     <section className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
