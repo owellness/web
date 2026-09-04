@@ -247,6 +247,8 @@ const fetchFeed = async (
       throw error;
     }
 
+    if (response.status === 304) return response;
+
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
       if (!location || redirects === MAX_REDIRECTS) {
