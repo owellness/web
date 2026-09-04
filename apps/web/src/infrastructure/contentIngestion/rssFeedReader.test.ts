@@ -91,6 +91,55 @@ test("unsafe XML declarations are rejected before item parsing", () => {
   );
 });
 
+test("conditional feed requests accept 304 responses without a redirect location", async () => {
+  const originalFetch = globalThis.fetch;
+  let requestHeaders: Headers | undefined;
+  const lastModified = "Tue, 01 Sep 2026 00:00:00 GMT";
+
+  globalThis.fetch = (async (_input, init) => {
+    requestHeaders = new Headers(init?.headers);
+    return new Response(null, {
+      status: 304,
+      headers: {
+        etag: '"current-etag"',
+        "last-modified": lastModified,
+      },
+    });
+  }) as typeof fetch;
+
+  try {
+    const result = await rssFeedReader.fetch(source, {
+      etag: '"saved-etag"',
+      lastModified,
+    });
+
+    assert.equal(requestHeaders?.get("if-none-match"), '"saved-etag"');
+    assert.equal(requestHeaders?.get("if-modified-since"), lastModified);
+    assert.deepEqual(result, {
+      kind: "not-modified",
+      etag: '"current-etag"',
+      lastModified,
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("redirect responses without a location are rejected", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async () =>
+    new Response(null, { status: 302 })) as typeof fetch;
+
+  try {
+    await assert.rejects(
+      () => rssFeedReader.fetch(source, null),
+      /feed_redirect_rejected/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("chunked feeds are cancelled as soon as the byte limit is exceeded", async () => {
   const originalFetch = globalThis.fetch;
   let cancelled = false;
