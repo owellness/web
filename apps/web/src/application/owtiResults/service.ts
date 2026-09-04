@@ -42,7 +42,6 @@ export const createOwtiResultService = (repository: OwtiResultRepository) => ({
 
     const saved = await repository.insert({
       userId,
-      answers: parsed.data.answers,
       domainAverages,
       typeCode: result.code,
     });

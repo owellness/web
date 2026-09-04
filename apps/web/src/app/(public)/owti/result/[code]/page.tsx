@@ -266,6 +266,12 @@ export default async function OwtiResultPage({
           >
             다른 유형 보기
           </Link>
+          <Link
+            href="/mypage"
+            className="rounded-full border border-border px-6 py-3 text-sm font-medium text-foreground transition hover:bg-muted"
+          >
+            검사 이력 보기
+          </Link>
         </div>
 
         <NewsletterCTA source="owti-result" />

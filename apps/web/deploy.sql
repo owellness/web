@@ -271,6 +271,22 @@ CREATE INDEX IF NOT EXISTS "owti_events_session_idx" ON "owti_events" USING btre
 CREATE INDEX IF NOT EXISTS "owti_events_created_idx" ON "owti_events" USING btree ("created_at" DESC NULLS LAST);
 
 -- ─────────────────────────────────────────────
+-- Authenticated OWTI result history — migrations 0007–0008
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS "owti_results" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" uuid NOT NULL REFERENCES "public"."users"("id") ON DELETE cascade,
+	"answers" jsonb,
+	"domain_averages" jsonb NOT NULL,
+	"type_code" varchar(4) NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+ALTER TABLE "owti_results" ALTER COLUMN "answers" DROP NOT NULL;
+COMMENT ON COLUMN "owti_results"."answers" IS
+	'Legacy compatibility only; web submissions do not retain individual answers.';
+CREATE INDEX IF NOT EXISTS "owti_results_user_created_idx" ON "owti_results" USING btree ("user_id", "created_at" DESC NULLS LAST);
+
+-- ─────────────────────────────────────────────
 -- Seed: 카테고리 4개 (앱이 자동 시드하지만 사전 삽입해 둠)
 -- ─────────────────────────────────────────────
 INSERT INTO "categories" ("slug", "name", "description", "position") VALUES

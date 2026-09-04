@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserRound } from "lucide-react";
 
 import { categoryService } from "@/composition";
 import { SITE_NAME } from "@/config/site";
@@ -48,6 +49,14 @@ export async function SiteHeader() {
             className="hidden whitespace-nowrap rounded-md px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground md:inline-flex"
           >
             검색
+          </Link>
+          <Link
+            href="/mypage"
+            aria-label="마이페이지"
+            className="hidden items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground md:inline-flex"
+          >
+            <UserRound className="size-4" aria-hidden />
+            마이페이지
           </Link>
           <ThemeToggle />
           <Link

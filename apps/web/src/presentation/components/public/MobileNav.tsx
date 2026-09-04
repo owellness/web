@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Search, Sparkles, X } from "lucide-react";
+import { Menu, Search, Sparkles, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 
@@ -99,6 +99,14 @@ export function MobileNav({ cats }: { cats: NavCategory[] }) {
             >
               <Search className="size-4 text-muted-foreground" aria-hidden />
               검색
+            </Link>
+            <Link
+              href="/mypage"
+              onClick={close}
+              className="flex items-center gap-2 rounded-md px-3 py-2.5 text-foreground transition hover:bg-muted"
+            >
+              <UserRound className="size-4 text-muted-foreground" aria-hidden />
+              마이페이지
             </Link>
             <Link
               href="/newsletter"

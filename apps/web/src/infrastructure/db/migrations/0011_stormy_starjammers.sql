@@ -1,0 +1,1 @@
+ALTER TABLE "owti_results" ALTER COLUMN "answers" DROP NOT NULL;

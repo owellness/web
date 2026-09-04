@@ -469,12 +469,12 @@ export const owtiEvents = pgTable(
 );
 
 // ─────────────────────────────────────────────────────────────
-// OWTI results — 로그인 사용자의 검사 결과 히스토리 (모바일 앱 API v1)
+// OWTI results — 로그인 사용자의 웹·모바일 검사 결과 히스토리
 // ─────────────────────────────────────────────────────────────
 
 // Scores are recomputed server-side from the raw answers with the shared
-// scoring logic (@owellness/shared/owti); answers are kept so a future
-// scoring revision can rescore history.
+// scoring logic (@owellness/shared/owti). Individual answers are intentionally
+// not retained after scoring; only the result summary is stored for history.
 export const owtiResults = pgTable(
   "owti_results",
   {
@@ -482,8 +482,9 @@ export const owtiResults = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    // question id (1–48, string key) → Likert answer (1–5)
-    answers: jsonb("answers").notNull().$type<Record<string, number>>(),
+    // Legacy mobile API releases stored answers here. New submissions leave
+    // this nullable column empty to preserve the no-individual-answers policy.
+    answers: jsonb("answers").$type<Record<string, number>>(),
     // domain key → average score (1–5 float)
     domainAverages: jsonb("domain_averages")
       .notNull()

@@ -1,7 +1,6 @@
 export type OwtiResultRecord = {
   id: string;
   userId: string;
-  answers: Record<string, number>;
   domainAverages: Record<string, number>;
   typeCode: string;
   createdAt: Date;

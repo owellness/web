@@ -16,7 +16,7 @@ import {
 import { trackOwtiEvent } from "@/presentation/lib/owtiTracking";
 import {
   OWTI_ANSWERS_STORAGE_KEY,
-  OWTI_LOGIN_PENDING_STORAGE_KEY,
+  OWTI_RESULT_PENDING_STORAGE_KEY,
 } from "@/presentation/lib/owtiStorage";
 
 const STARTED_KEY = "owti-started";
@@ -151,27 +151,19 @@ export function OwtiQuiz({
       }
 
       const resultPath = `/owti/result/${result.code}#${encoded}`;
+      try {
+        // The authenticated result page persists the server-verified result,
+        // then clears the answers only after the database write succeeds.
+        sessionStorage.setItem(OWTI_RESULT_PENDING_STORAGE_KEY, result.code);
+      } catch {
+        /* storage disabled — the result can still be viewed, but not saved */
+      }
+
       if (!isAuthenticated) {
-        try {
-          // Keep the answers through the OAuth round trip. The result page
-          // removes them only after Kakao successfully redirects back.
-          sessionStorage.setItem(
-            OWTI_LOGIN_PENDING_STORAGE_KEY,
-            result.code,
-          );
-        } catch {
-          /* storage disabled — the URL hash still carries the score */
-        }
         await signIn("kakao", { redirectTo: resultPath });
         return;
       }
 
-      try {
-        sessionStorage.removeItem(OWTI_ANSWERS_STORAGE_KEY);
-        sessionStorage.removeItem(OWTI_LOGIN_PENDING_STORAGE_KEY);
-      } catch {
-        /* storage disabled — nothing to clean up */
-      }
       router.push(resultPath);
     } catch {
       setSubmitting(false);
