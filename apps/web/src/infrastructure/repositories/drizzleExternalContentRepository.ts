@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import {
   and,
+  asc,
   desc,
   eq,
   inArray,
@@ -14,6 +15,7 @@ import {
 } from "drizzle-orm";
 
 import type {
+  ExternalContentDetail,
   ExternalContentSummary,
   ExternalFeedItem,
   ExternalFeedSource,
@@ -89,14 +91,32 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
     return row ?? null;
   },
 
+  async hasPendingBodyRefresh(source) {
+    const [row] = await db
+      .select({ id: externalContentItems.id })
+      .from(externalContentItems)
+      .where(
+        and(
+          eq(externalContentItems.sourceKey, source),
+          eq(externalContentItems.status, "pending_translation"),
+          eq(externalContentItems.originalBody, ""),
+        ),
+      )
+      .limit(1);
+
+    return Boolean(row);
+  },
+
   async applyTranslationPolicy(source, allowed, provider) {
     const now = new Date();
     const rows = await db
       .update(externalContentItems)
       .set({
         status: allowed ? "pending_translation" : "rights_pending",
+        ...(!allowed ? { originalBody: "" } : {}),
         translatedTitle: null,
         translatedExcerpt: null,
+        translatedBody: null,
         translationProvider: null,
         translationError: null,
         translatedAt: null,
@@ -136,6 +156,10 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
         id: externalContentItems.id,
         contentHash: externalContentItems.contentHash,
         status: externalContentItems.status,
+        originalTitle: externalContentItems.originalTitle,
+        originalExcerpt: externalContentItems.originalExcerpt,
+        originalBody: externalContentItems.originalBody,
+        translatedBody: externalContentItems.translatedBody,
       })
       .from(externalContentItems)
       .where(
@@ -158,12 +182,6 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
       return { changed: false, visibilityChanged: false };
     }
 
-    const needsTranslation =
-      source.translationAllowed &&
-      (!existing ||
-        existing.contentHash !== item.contentHash ||
-        existing.status !== "published");
-
     if (!existing) {
       const [inserted] = await db
         .insert(externalContentItems)
@@ -176,6 +194,7 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
           sourcePublishedAt: item.sourcePublishedAt,
           originalTitle: item.originalTitle,
           originalExcerpt: item.originalExcerpt,
+          originalBody: item.originalBody,
           contentHash: item.contentHash,
           status: desiredStatus,
         })
@@ -189,8 +208,24 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
     }
 
     const contentChanged = existing.contentHash !== item.contentHash;
+    const summaryChanged =
+      existing.originalTitle !== item.originalTitle ||
+      existing.originalExcerpt !== item.originalExcerpt;
+    const bodyChanged = existing.originalBody !== item.originalBody;
+    const bodyTranslationMissing = Boolean(
+      item.originalBody && !existing.translatedBody,
+    );
     const permissionsChanged =
       !source.translationAllowed && existing.status === "published";
+    const needsFullTranslation =
+      source.translationAllowed &&
+      (summaryChanged ||
+        (existing.status !== "published" && contentChanged));
+    const needsBodyTranslation =
+      source.translationAllowed &&
+      existing.status === "published" &&
+      !summaryChanged &&
+      (bodyChanged || bodyTranslationMissing);
 
     await db
       .update(externalContentItems)
@@ -201,19 +236,28 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
         sourcePublishedAt: item.sourcePublishedAt,
         originalTitle: item.originalTitle,
         originalExcerpt: item.originalExcerpt,
+        originalBody: item.originalBody,
         contentHash: item.contentHash,
         lastSeenAt: new Date(),
-        updatedAt: new Date(),
-        ...(contentChanged || permissionsChanged || needsTranslation
+        ...(contentChanged || permissionsChanged
+          ? { updatedAt: new Date() }
+          : {}),
+        ...(permissionsChanged || needsFullTranslation
           ? {
               status: desiredStatus,
               translatedTitle: null,
               translatedExcerpt: null,
+              translatedBody: null,
               translationProvider: null,
               translationError: null,
               translatedAt: null,
             }
-          : {}),
+          : needsBodyTranslation && bodyChanged
+            ? {
+                translatedBody: null,
+                translationError: null,
+              }
+            : {}),
       })
       .where(eq(externalContentItems.id, existing.id));
 
@@ -221,7 +265,7 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
       changed: contentChanged || permissionsChanged,
       visibilityChanged:
         existing.status === "published" &&
-        (contentChanged || permissionsChanged),
+        (permissionsChanged || needsFullTranslation),
     };
   },
 
@@ -234,6 +278,7 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
         sourceUrl: externalContentItems.sourceUrl,
         originalTitle: externalContentItems.originalTitle,
         originalExcerpt: externalContentItems.originalExcerpt,
+        originalBody: externalContentItems.originalBody,
         sourceAuthor: externalContentItems.sourceAuthor,
         sourcePublishedAt: externalContentItems.sourcePublishedAt,
         contentHash: externalContentItems.contentHash,
@@ -242,13 +287,29 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
       .where(
         and(
           eq(externalContentItems.sourceKey, source),
-          inArray(externalContentItems.status, [
-            "pending_translation",
-            "failed",
-          ]),
+          or(
+            inArray(externalContentItems.status, [
+              "pending_translation",
+              "failed",
+            ]),
+            and(
+              eq(externalContentItems.status, "published"),
+              ne(externalContentItems.originalBody, ""),
+              isNull(externalContentItems.translatedBody),
+            ),
+          ),
         ),
       )
-      .orderBy(desc(externalContentItems.sourcePublishedAt))
+      .orderBy(
+        sql`CASE
+          WHEN ${externalContentItems.status} = 'pending_translation' THEN 0
+          WHEN ${externalContentItems.status} = 'published'
+            AND ${externalContentItems.translationError} IS NULL THEN 1
+          ELSE 2
+        END`,
+        asc(externalContentItems.updatedAt),
+        desc(externalContentItems.sourcePublishedAt),
+      )
       .limit(limit);
 
     return rows.map((row) => ({ ...row, sourceKey: source }));
@@ -262,6 +323,7 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
         .set({
           translatedTitle: translation.translatedTitle,
           translatedExcerpt: translation.translatedExcerpt,
+          translatedBody: translation.translatedBody,
           translationProvider: translation.provider,
           translationError: null,
           translatedAt: new Date(),
@@ -272,10 +334,17 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
           and(
             eq(externalContentItems.id, translation.id),
             eq(externalContentItems.contentHash, translation.contentHash),
-            inArray(externalContentItems.status, [
-              "pending_translation",
-              "failed",
-            ]),
+            or(
+              inArray(externalContentItems.status, [
+                "pending_translation",
+                "failed",
+              ]),
+              and(
+                eq(externalContentItems.status, "published"),
+                eq(externalContentItems.translationProvider, translation.provider),
+                isNull(externalContentItems.translatedBody),
+              ),
+            ),
           ),
         )
         .returning({ id: externalContentItems.id });
@@ -286,11 +355,12 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
 
   async markTranslationFailed(candidates, errorCode: string) {
     for (const candidate of candidates) {
+      const failure = errorCode.slice(0, 120);
       await db
         .update(externalContentItems)
         .set({
           status: "failed",
-          translationError: errorCode.slice(0, 120),
+          translationError: failure,
           updatedAt: new Date(),
         })
         .where(
@@ -301,6 +371,21 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
               "pending_translation",
               "failed",
             ]),
+          ),
+        );
+
+      await db
+        .update(externalContentItems)
+        .set({
+          translationError: failure,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(externalContentItems.id, candidate.id),
+            eq(externalContentItems.contentHash, candidate.contentHash),
+            eq(externalContentItems.status, "published"),
+            isNull(externalContentItems.translatedBody),
           ),
         );
     }
@@ -423,5 +508,47 @@ export const drizzleExternalContentRepository: ExternalContentRepositoryPort = {
     }
 
     return balanced;
+  },
+
+  async findPublishedById(
+    id,
+    allowedSources,
+    provider,
+  ): Promise<ExternalContentDetail | null> {
+    if (allowedSources.length === 0) return null;
+
+    const [row] = await db
+      .select({
+        id: externalContentItems.id,
+        sourceKey: externalContentItems.sourceKey,
+        sourceName: externalContentItems.sourceName,
+        sourceUrl: externalContentItems.sourceUrl,
+        sourceAuthor: externalContentItems.sourceAuthor,
+        sourcePublishedAt: externalContentItems.sourcePublishedAt,
+        originalTitle: externalContentItems.originalTitle,
+        title: externalContentItems.translatedTitle,
+        excerpt: externalContentItems.translatedExcerpt,
+        body: externalContentItems.translatedBody,
+        translatedAt: externalContentItems.translatedAt,
+      })
+      .from(externalContentItems)
+      .where(
+        and(
+          eq(externalContentItems.id, id),
+          eq(externalContentItems.status, "published"),
+          inArray(externalContentItems.sourceKey, allowedSources),
+          eq(externalContentItems.translationProvider, provider),
+        ),
+      )
+      .limit(1);
+
+    if (!row?.title) return null;
+    return {
+      ...row,
+      sourceKey: row.sourceKey as ExternalContentDetail["sourceKey"],
+      title: row.title,
+      excerpt: row.excerpt ?? "",
+      body: row.body ?? "",
+    };
   },
 };

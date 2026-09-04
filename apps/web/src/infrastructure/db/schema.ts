@@ -217,8 +217,10 @@ export const externalContentItems = pgTable(
     }).notNull(),
     originalTitle: text("original_title").notNull(),
     originalExcerpt: text("original_excerpt").notNull().default(""),
+    originalBody: text("original_body").notNull().default(""),
     translatedTitle: text("translated_title"),
     translatedExcerpt: text("translated_excerpt"),
+    translatedBody: text("translated_body"),
     contentHash: varchar("content_hash", { length: 64 }).notNull(),
     status: externalContentStatus("status")
       .notNull()

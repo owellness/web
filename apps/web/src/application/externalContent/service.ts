@@ -1,4 +1,5 @@
 import type {
+  ExternalContentDetail,
   ExternalContentSummary,
   ExternalFeedSource,
   ExternalSourceSyncResult,
@@ -27,6 +28,20 @@ const errorCode = (error: unknown): string => {
   return "external_sync_failed";
 };
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const MAX_TRANSLATION_CANDIDATES_PER_SOURCE = 4;
+const SOURCE_SYNC_BUDGET_MS = 45_000;
+const SYSTEMIC_TRANSLATION_ERRORS = new Set([
+  "translator_auth_failed",
+  "translator_invalid_credentials",
+  "translator_network_error",
+  "translator_not_configured",
+  "translator_quota_exceeded",
+  "translator_timeout",
+  "translator_upstream_unavailable",
+]);
+
 export const createExternalContentService = ({
   sources,
   feedReader,
@@ -37,6 +52,7 @@ export const createExternalContentService = ({
   const syncSource = async (
     source: ExternalFeedSource,
   ): Promise<ExternalSourceSyncResult> => {
+    const syncSignal = AbortSignal.timeout(SOURCE_SYNC_BUDGET_MS);
     let rightsPending = 0;
     let changed = 0;
     let visibilityChanged = false;
@@ -78,7 +94,13 @@ export const createExternalContentService = ({
       else if (policyChanged > 0) visibilityChanged = true;
 
       const state = await repository.getFeedState(source.key);
-      const feed = await feedReader.fetch(source, state);
+      const forceBodyRefresh =
+        source.translationAllowed &&
+        (await repository.hasPendingBodyRefresh(source.key));
+      const feed = await feedReader.fetch(
+        source,
+        forceBodyRefresh ? null : state,
+      );
 
       if (feed.kind === "items") {
         for (const item of feed.items) {
@@ -96,27 +118,36 @@ export const createExternalContentService = ({
       );
 
       const candidates: TranslationCandidate[] = source.translationAllowed
-        ? await repository.listTranslationCandidates(source.key, 20)
+        ? await repository.listTranslationCandidates(
+            source.key,
+            MAX_TRANSLATION_CANDIDATES_PER_SOURCE,
+          )
         : [];
       const translatorConfigured = translator.isConfigured();
 
       let translated = 0;
+      let translationFailure: string | undefined;
       if (candidates.length > 0 && translatorConfigured) {
-        try {
-          const translations = await translator.translate(candidates);
-          translated = await repository.publishTranslations(translations);
-        } catch (error) {
-          const code = errorCode(error);
-          await repository.markTranslationFailed(candidates, code);
-          return {
-            source: source.key,
-            status: "failed",
-            discovered: changed,
-            translated: 0,
-            rightsPending,
-            visibilityChanged,
-            errorCode: code,
-          };
+        for (const candidate of candidates) {
+          if (syncSignal.aborted) {
+            translationFailure ??= "translator_timeout";
+            break;
+          }
+          try {
+            const translations = await translator.translate([candidate], {
+              signal: syncSignal,
+            });
+            translated += await repository.publishTranslations(translations);
+          } catch (error) {
+            const code = errorCode(error);
+            if (SYSTEMIC_TRANSLATION_ERRORS.has(code)) {
+              translationFailure = code;
+            } else {
+              translationFailure ??= code;
+            }
+            await repository.markTranslationFailed([candidate], code);
+            if (SYSTEMIC_TRANSLATION_ERRORS.has(code)) break;
+          }
         }
       }
 
@@ -129,6 +160,18 @@ export const createExternalContentService = ({
           rightsPending,
           visibilityChanged,
           errorCode: "translator_not_configured",
+        };
+      }
+
+      if (translationFailure) {
+        return {
+          source: source.key,
+          status: "failed",
+          discovered: changed,
+          translated,
+          rightsPending,
+          visibilityChanged,
+          errorCode: translationFailure,
         };
       }
 
@@ -190,6 +233,19 @@ export const createExternalContentService = ({
       if (allowedSources.length === 0) return [];
       return repository.listPublished(
         safeLimit,
+        allowedSources,
+        translator.provider,
+      );
+    },
+
+    async getPublishedById(id: string): Promise<ExternalContentDetail | null> {
+      if (!UUID_PATTERN.test(id)) return null;
+      const allowedSources = sources
+        .filter((source) => source.translationAllowed)
+        .map((source) => source.key);
+      if (allowedSources.length === 0) return null;
+      return repository.findPublishedById(
+        id,
         allowedSources,
         translator.provider,
       );

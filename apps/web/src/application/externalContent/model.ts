@@ -25,6 +25,7 @@ export type ExternalFeedItem = {
   sourceUrl: string;
   originalTitle: string;
   originalExcerpt: string;
+  originalBody: string;
   sourceAuthor: string | null;
   sourcePublishedAt: Date;
   contentHash: string;
@@ -53,6 +54,7 @@ export type ExternalTranslation = {
   contentHash: string;
   translatedTitle: string;
   translatedExcerpt: string;
+  translatedBody: string;
   provider: string;
 };
 
@@ -70,6 +72,12 @@ export type ExternalContentSummary = {
   sourcePublishedAt: Date;
   title: string;
   excerpt: string;
+};
+
+export type ExternalContentDetail = ExternalContentSummary & {
+  originalTitle: string;
+  body: string;
+  translatedAt: Date | null;
 };
 
 export type ExternalSourceSyncResult = {

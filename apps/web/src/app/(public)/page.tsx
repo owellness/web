@@ -98,8 +98,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <ExternalContentSection items={externalItems} />
-
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
           카테고리
@@ -121,6 +119,8 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      <ExternalContentSection items={externalItems} />
     </>
   );
 }

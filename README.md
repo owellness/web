@@ -79,15 +79,17 @@ pnpm dev
 
 홈 화면의 `Global Wellness Briefing`은 NutritionFacts.org, Gowing Life,
 Global Wellness Institute의 공식 RSS에서 최신 글을 하루 한 번 수집합니다.
-원문 전체나 이미지를 복제하지 않고 제목·RSS 소개문·출처·날짜·원문 링크만
-저장하며, Papago로 번역된 항목만 공개합니다. 피드 요청은 ETag와
-Last-Modified를 사용하고 출처별 실패를 격리합니다.
+RSS가 제공한 제목·소개문·텍스트 본문과 출처·날짜·원문 링크를 저장하며,
+이미지나 임의 HTML은 복제하지 않습니다. Papago 번역이 완료된 항목만
+공개합니다. 피드 요청은 ETag와 Last-Modified를 사용하고 출처별 실패를
+격리합니다.
 
 운영 설정:
 
 1. `pnpm --filter web db:migrate`로 `external_content_items`,
-   `external_feed_states`를 생성. Neon SQL Editor를 쓰는 경우에는 대신
-   `apps/web/migrate-0007-external-content.sql`만 실행
+   `external_feed_states`와 본문 컬럼을 생성. Neon SQL Editor를 쓰는 경우
+   신규 DB에는 `apps/web/migrate-0007-external-content.sql` 다음
+   `apps/web/migrate-0008-external-content-body.sql`을 실행
 2. Vercel에 별도의 강한 `CRON_SECRET`, `PAPAGO_CLIENT_ID`,
    `PAPAGO_CLIENT_SECRET` 등록
 3. 출처별 번역·재게시 허락을 확인한 뒤에만
@@ -96,10 +98,11 @@ Last-Modified를 사용하고 출처별 실패를 격리합니다.
 4. 배포하면 `apps/web/vercel.json`의 Vercel Cron이 매일 01:00 UTC
    (한국 시간 10:00)에 `/api/cron/wellness-feeds`를 호출
 
-Papago Text Translation은 제목과 소개문을 각각 영어에서 한국어로
-번역합니다. 화면에는 정책에 따라 `Papago 번역` 표기와 Papago 링크를
-노출합니다. 번역 공급자를 변경하면 기존 공급자로 번역된 항목은 다음
-동기화에서 숨김·재번역되며, Papago 번역이 완료된 항목만 다시 공개됩니다.
+Papago Text Translation은 제목·소개문·RSS 본문을 영어에서 한국어로
+번역합니다. 긴 본문은 API 제한보다 작게 나눠 번역한 뒤 순서대로 합칩니다.
+화면에는 정책에 따라 `Papago 번역` 표기와 Papago 링크를 노출합니다. 번역
+공급자를 변경하면 기존 공급자로 번역된 항목은 다음 동기화에서 숨김·재번역되며,
+Papago 번역이 완료된 항목만 다시 공개됩니다.
 
 환경변수가 비어 있거나 허락 목록에서 빠진 출처는 원문을 수집하더라도
 `rights_pending` 상태로만 보관되고 홈페이지에는 노출되지 않습니다. 허락을
@@ -112,7 +115,25 @@ Papago Text Translation은 제목과 소개문을 각각 영어에서 한국어�
 Vercel Function 로그의 출처별 `errorCode`를 확인하고, 아래 쿼리로 최근 상태를
 점검할 수 있습니다.
 
+기존 제목·소개문 데이터에 본문을 처음 채울 때는 먼저 본문 컬럼을 추가하고 새
+배포가 Ready인지 확인합니다. 그 다음에만
+`apps/web/migrate-0009-external-content-body-backfill.sql`을 실행해 피드 검증자를
+초기화하고 Cron을 호출합니다. 실행당 출처별 최대 4개를 처리하므로 현재 대기
+건수가 없어질 때까지 여러 번 호출할 수 있습니다. 본문 백필 중에도 기존 카드와
+번역 요약은 계속 공개됩니다.
+
 ```sql
+SELECT source_key,
+       count(*) FILTER (WHERE status = 'published') AS published,
+       count(*) FILTER (WHERE original_body <> '') AS body_available,
+       count(*) FILTER (
+         WHERE COALESCE(translated_body, '') <> ''
+       ) AS body_translated,
+       count(*) FILTER (WHERE translation_error IS NOT NULL) AS translation_errors
+FROM external_content_items
+GROUP BY source_key
+ORDER BY source_key;
+
 SELECT source_key, last_success_at, last_error, consecutive_failures
 FROM external_feed_states
 ORDER BY source_key;
@@ -126,8 +147,13 @@ ORDER BY source_key;
 ```sql
 UPDATE external_content_items
 SET status = 'withdrawn',
+    original_body = '',
     translated_title = NULL,
     translated_excerpt = NULL,
+    translated_body = NULL,
+    translation_provider = NULL,
+    translation_error = NULL,
+    translated_at = NULL,
     updated_at = now()
 WHERE source_url = 'https://original.example/article';
 ```

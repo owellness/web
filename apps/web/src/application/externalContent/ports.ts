@@ -1,4 +1,5 @@
 import type {
+  ExternalContentDetail,
   ExternalContentSummary,
   ExternalFeedItem,
   ExternalFeedResult,
@@ -20,7 +21,10 @@ export interface ExternalFeedReaderPort {
 export interface ExternalTranslatorPort {
   readonly provider: string;
   isConfigured(): boolean;
-  translate(candidates: TranslationCandidate[]): Promise<ExternalTranslation[]>;
+  translate(
+    candidates: TranslationCandidate[],
+    options?: { signal?: AbortSignal },
+  ): Promise<ExternalTranslation[]>;
 }
 
 export interface ExternalContentRepositoryPort {
@@ -30,6 +34,7 @@ export interface ExternalContentRepositoryPort {
     leaseToken: string,
   ): Promise<void>;
   getFeedState(source: ExternalSourceKey): Promise<ExternalFeedState | null>;
+  hasPendingBodyRefresh(source: ExternalSourceKey): Promise<boolean>;
   applyTranslationPolicy(
     source: ExternalSourceKey,
     allowed: boolean,
@@ -59,6 +64,11 @@ export interface ExternalContentRepositoryPort {
     allowedSources: ExternalSourceKey[],
     provider: string,
   ): Promise<ExternalContentSummary[]>;
+  findPublishedById(
+    id: string,
+    allowedSources: ExternalSourceKey[],
+    provider: string,
+  ): Promise<ExternalContentDetail | null>;
 }
 
 export interface ExternalContentRevalidationPort {

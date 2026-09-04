@@ -11,7 +11,7 @@ const source: ExternalFeedSource = {
   homepageUrl: "https://example.com/",
   feedUrl: "https://example.com/feed/",
   allowedHosts: ["example.com"],
-  translationAllowed: false,
+  translationAllowed: true,
 };
 
 test("a malformed item is skipped while valid RSS entries are sanitized", () => {
@@ -23,10 +23,16 @@ test("a malformed item is skipped while valid RSS entries are sanitized", () => 
         <pubDate>Tue, 01 Sep 2026 00:00:00 GMT</pubDate>
       </item>
       <item>
-        <title><![CDATA[<b>Useful title</b>]]></title>
+        <title><![CDATA[<b>Useful &amp; practical title</b>]]></title>
         <link>https://example.com/useful?utm_source=rss&amp;a=1#top</link>
         <guid>useful-1</guid>
         <description><![CDATA[<p>Short <strong>introduction</strong>.</p>]]></description>
+        <content:encoded><![CDATA[
+          <h2>Section heading</h2>
+          <p>First &amp; second paragraph with <strong>emphasis</strong>.</p>
+          <script>alert("unsafe")</script>
+          <ul><li>Useful point</li></ul>
+        ]]></content:encoded>
         <dc:creator>Writer</dc:creator>
         <pubDate>Tue, 01 Sep 2026 00:00:00 GMT</pubDate>
       </item>
@@ -35,9 +41,43 @@ test("a malformed item is skipped while valid RSS entries are sanitized", () => 
   const items = parseRssFeed(source, xml);
 
   assert.equal(items.length, 1);
-  assert.equal(items[0]?.originalTitle, "Useful title");
+  assert.equal(items[0]?.originalTitle, "Useful & practical title");
   assert.equal(items[0]?.originalExcerpt, "Short introduction.");
+  assert.equal(
+    items[0]?.originalBody,
+    "Section heading\n\nFirst & second paragraph with emphasis.\n\n• Useful point",
+  );
   assert.equal(items[0]?.sourceUrl, "https://example.com/useful?a=1");
+});
+
+test("RSS body text is not retained while translation permission is disabled", () => {
+  const [item] = parseRssFeed(
+    { ...source, translationAllowed: false },
+    `<rss><channel><item>
+      <title>Summary only</title>
+      <link>https://example.com/summary-only</link>
+      <description>Summary</description>
+      <content:encoded><![CDATA[<p>Full body</p>]]></content:encoded>
+      <pubDate>Tue, 01 Sep 2026 00:00:00 GMT</pubDate>
+    </item></channel></rss>`,
+  );
+
+  assert.equal(item?.originalBody, "");
+});
+
+test("RSS body text is capped within the translation budget", () => {
+  const [item] = parseRssFeed(
+    source,
+    `<rss><channel><item>
+      <title>Long body</title>
+      <link>https://example.com/long-body</link>
+      <content:encoded><![CDATA[<p>${"a".repeat(25_000)}</p>]]></content:encoded>
+      <pubDate>Tue, 01 Sep 2026 00:00:00 GMT</pubDate>
+    </item></channel></rss>`,
+  );
+
+  assert.equal(Array.from(item?.originalBody ?? "").length, 24_000);
+  assert.ok(item?.originalBody.endsWith("…"));
 });
 
 test("unsafe XML declarations are rejected before item parsing", () => {

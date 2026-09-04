@@ -7,11 +7,14 @@ import type { ExternalTranslatorPort } from "@/application/externalContent/ports
 const PAPAGO_ENDPOINT =
   "https://papago.apigw.ntruss.com/nmt/v1/translation";
 const MAX_TEXT_CHARACTERS = 5_000;
+const MAX_BODY_CHARACTERS = 24_000;
+const BODY_CHUNK_CHARACTERS = 4_500;
 const MAX_CONCURRENT_REQUESTS = 2;
 const REQUEST_TIMEOUT_MS = 10_000;
 const TRANSLATION_TIMEOUT_MS = 40_000;
 const RETRY_DELAY_MS = 200;
 const MAX_ATTEMPTS = 2;
+const HTML_TAG_PATTERN = /<\/?[a-z][a-z0-9-]*(?:\s[^<>]*|\/?)>/i;
 
 type PapagoResponse = {
   message?: {
@@ -23,7 +26,8 @@ type PapagoResponse = {
 
 type TranslationSlot = {
   candidateIndex: number;
-  field: "title" | "excerpt";
+  field: "title" | "excerpt" | "body";
+  chunkIndex?: number;
   text: string;
 };
 
@@ -51,8 +55,21 @@ const credentials = (): { clientId: string; clientSecret: string } => {
   return { clientId, clientSecret };
 };
 
-const normalizeSourceText = (value: string): string => {
-  const text = value.replace(/\s+/g, " ").trim();
+const normalizeParagraphs = (value: string): string =>
+  value
+    .replace(/\r\n?/g, "\n")
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .join("\n\n");
+
+const normalizeSourceText = (
+  value: string,
+  preserveParagraphs = false,
+): string => {
+  const text = preserveParagraphs
+    ? normalizeParagraphs(value)
+    : value.replace(/\s+/g, " ").trim();
   if (!text) throw new Error("translator_invalid_input");
   if (Array.from(text).length > MAX_TEXT_CHARACTERS) {
     throw new Error("translator_text_too_long");
@@ -60,15 +77,66 @@ const normalizeSourceText = (value: string): string => {
   return text;
 };
 
-const assertTranslation = (value: unknown): string => {
+const assertTranslation = (
+  value: unknown,
+  preserveParagraphs = false,
+): string => {
   if (typeof value !== "string") {
     throw new TranslatorRequestError("translator_invalid_response", false);
   }
-  const text = value.replace(/\s+/g, " ").trim();
-  if (!text || /<[^>]+>/.test(text)) {
+  const text = preserveParagraphs
+    ? normalizeParagraphs(value)
+    : value.replace(/\s+/g, " ").trim();
+  if (!text || HTML_TAG_PATTERN.test(text)) {
     throw new TranslatorRequestError("translator_invalid_response", false);
   }
   return text;
+};
+
+const splitBodyForTranslation = (value: string): string[] => {
+  const normalized = normalizeParagraphs(value);
+  const characters = Array.from(normalized);
+  if (characters.length > MAX_BODY_CHARACTERS) {
+    throw new Error("translator_body_too_long");
+  }
+  if (characters.length <= BODY_CHUNK_CHARACTERS) {
+    return normalized ? [normalized] : [];
+  }
+
+  const chunks: string[] = [];
+  let remaining = characters;
+  while (remaining.length > BODY_CHUNK_CHARACTERS) {
+    const minimumBoundary = Math.floor(BODY_CHUNK_CHARACTERS * 0.6);
+    let cutAt = BODY_CHUNK_CHARACTERS;
+
+    for (let index = BODY_CHUNK_CHARACTERS; index >= minimumBoundary; index -= 1) {
+      if (remaining[index - 1] === "\n" && remaining[index] === "\n") {
+        cutAt = index - 1;
+        break;
+      }
+      if (
+        remaining[index] === " " &&
+        /[.!?]/.test(remaining[index - 1] ?? "")
+      ) {
+        cutAt = index;
+        break;
+      }
+      if (cutAt === BODY_CHUNK_CHARACTERS && remaining[index] === " ") {
+        cutAt = index;
+      }
+    }
+
+    const chunk = remaining.slice(0, cutAt).join("").trim();
+    if (chunk) chunks.push(chunk);
+    remaining = remaining.slice(cutAt);
+    while (remaining[0] === " " || remaining[0] === "\n") {
+      remaining = remaining.slice(1);
+    }
+  }
+
+  const tail = remaining.join("").trim();
+  if (tail) chunks.push(tail);
+  return chunks;
 };
 
 const httpFailure = (status: number): TranslatorRequestError => {
@@ -101,6 +169,7 @@ const requestTranslation = async (
   clientId: string,
   clientSecret: string,
   deadlineSignal: AbortSignal,
+  preserveParagraphs = false,
 ): Promise<string> => {
   const controller = new AbortController();
   const abortForDeadline = () => controller.abort();
@@ -139,7 +208,10 @@ const requestTranslation = async (
       throw new TranslatorRequestError("translator_invalid_response", false);
     }
 
-    return assertTranslation(body.message?.result?.translatedText);
+    return assertTranslation(
+      body.message?.result?.translatedText,
+      preserveParagraphs,
+    );
   } catch (error) {
     if (error instanceof TranslatorRequestError) throw error;
     throw new TranslatorRequestError(
@@ -163,8 +235,9 @@ const translateText = async (
   clientId: string,
   clientSecret: string,
   deadlineSignal: AbortSignal,
+  preserveParagraphs = false,
 ): Promise<string> => {
-  const text = normalizeSourceText(value);
+  const text = normalizeSourceText(value, preserveParagraphs);
   let lastFailure: TranslatorRequestError | null = null;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
@@ -174,6 +247,7 @@ const translateText = async (
         clientId,
         clientSecret,
         deadlineSignal,
+        preserveParagraphs,
       );
     } catch (error) {
       if (!(error instanceof TranslatorRequestError)) throw error;
@@ -198,6 +272,7 @@ export const papagoTranslator: ExternalTranslatorPort = {
 
   async translate(
     candidates: TranslationCandidate[],
+    options?: { signal?: AbortSignal },
   ): Promise<ExternalTranslation[]> {
     if (candidates.length === 0) return [];
 
@@ -208,8 +283,10 @@ export const papagoTranslator: ExternalTranslatorPort = {
       contentHash: candidate.contentHash,
       translatedTitle: "",
       translatedExcerpt: "",
+      translatedBody: "",
       provider: "papago",
     }));
+    const bodyChunks: string[][] = candidates.map(() => []);
 
     candidates.forEach((candidate, candidateIndex) => {
       slots.push({
@@ -224,9 +301,26 @@ export const papagoTranslator: ExternalTranslatorPort = {
           text: candidate.originalExcerpt,
         });
       }
+      splitBodyForTranslation(candidate.originalBody).forEach(
+        (text, chunkIndex) => {
+          slots.push({
+            candidateIndex,
+            field: "body",
+            chunkIndex,
+            text,
+          });
+        },
+      );
     });
 
     const deadlineController = new AbortController();
+    const abortForCaller = () => deadlineController.abort();
+    if (options?.signal?.aborted) deadlineController.abort();
+    else {
+      options?.signal?.addEventListener("abort", abortForCaller, {
+        once: true,
+      });
+    }
     const deadline = setTimeout(
       () => deadlineController.abort(),
       TRANSLATION_TIMEOUT_MS,
@@ -248,11 +342,14 @@ export const papagoTranslator: ExternalTranslatorPort = {
           clientId,
           clientSecret,
           deadlineController.signal,
+          slot.field === "body",
         );
         if (slot.field === "title") {
           results[slot.candidateIndex].translatedTitle = translated;
-        } else {
+        } else if (slot.field === "excerpt") {
           results[slot.candidateIndex].translatedExcerpt = translated;
+        } else {
+          bodyChunks[slot.candidateIndex][slot.chunkIndex ?? 0] = translated;
         }
       }
     };
@@ -269,11 +366,19 @@ export const papagoTranslator: ExternalTranslatorPort = {
       throw error;
     } finally {
       clearTimeout(deadline);
+      options?.signal?.removeEventListener("abort", abortForCaller);
     }
 
     if (results.some((result) => !result.translatedTitle)) {
       throw new Error("translator_invalid_response");
     }
+
+    candidates.forEach((candidate, index) => {
+      results[index].translatedBody = bodyChunks[index].join("\n\n");
+      if (candidate.originalBody.trim() && !results[index].translatedBody) {
+        throw new Error("translator_invalid_response");
+      }
+    });
 
     return results;
   },
