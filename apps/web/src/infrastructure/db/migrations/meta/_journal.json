@@ -85,6 +85,13 @@
       "when": 1788534299726,
       "tag": "0011_stormy_starjammers",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788538458640,
+      "tag": "0012_loud_thunderbolt",
+      "breakpoints": true
     }
   ]
 }

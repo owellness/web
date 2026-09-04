@@ -13,7 +13,9 @@ import type { ExternalFeedReaderPort } from "@/application/externalContent/ports
 const MAX_FEED_BYTES = 1_500_000;
 const MAX_REDIRECTS = 3;
 const MAX_ITEMS_PER_SOURCE = 10;
+const MAX_BODY_CHARACTERS = 24_000;
 const REQUEST_TIMEOUT_MS = 12_000;
+const EXTRACTION_VERSION = "rss-body-v1";
 
 const unwrap = (value: string): string => {
   const trimmed = value.trim();
@@ -60,19 +62,69 @@ const decodeXmlEntities = (value: string): string =>
     });
 
 const plainText = (html: string): string =>
-  sanitizeHtml(decodeXmlEntities(html), {
-    allowedTags: [],
-    allowedAttributes: {},
-  })
+  decodeXmlEntities(
+    sanitizeHtml(decodeXmlEntities(html), {
+      allowedTags: [],
+      allowedAttributes: {},
+    }),
+  )
     .replace(/\s*The post\s+[\s\S]+?\s+appeared first on\s+[\s\S]+?\.?$/i, "")
     .replace(/\s+/g, " ")
     .trim();
 
+const bodyText = (html: string): string => {
+  if (!html.trim()) return "";
+
+  const sanitized = sanitizeHtml(decodeXmlEntities(html), {
+    allowedTags: [
+      "p",
+      "br",
+      "div",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "li",
+      "blockquote",
+      "pre",
+      "tr",
+      "figure",
+    ],
+    allowedAttributes: {},
+  })
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<li(?:\s[^>]*)?>/gi, "\n• ")
+    .replace(
+      /<\/(?:p|div|h[1-6]|li|blockquote|pre|tr|figure)>/gi,
+      "\n\n",
+    )
+    .replace(/<[^>]+>/g, "");
+
+  const text = decodeXmlEntities(sanitized)
+    .replace(/\u00a0/g, " ")
+    .split(/\n+/)
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .join("\n\n")
+    .replace(
+      /\s*The post\s+[\s\S]+?\s+appeared first on\s+[\s\S]+?\.?$/i,
+      "",
+    )
+    .trim();
+
+  return truncate(text, MAX_BODY_CHARACTERS);
+};
+
 const truncate = (value: string, maxLength: number): string => {
-  if (value.length <= maxLength) return value;
-  const slice = value.slice(0, maxLength + 1);
+  const characters = Array.from(value);
+  if (characters.length <= maxLength) return value;
+  const contentLimit = Math.max(0, maxLength - 1);
+  const slice = characters.slice(0, contentLimit + 1);
   const lastSpace = slice.lastIndexOf(" ");
-  return `${slice.slice(0, lastSpace > maxLength * 0.7 ? lastSpace : maxLength).trim()}…`;
+  const cutAt = lastSpace > contentLimit * 0.7 ? lastSpace : contentLimit;
+  return `${slice.slice(0, cutAt).join("").trim()}…`;
 };
 
 const assertAllowedUrl = (
@@ -122,6 +174,9 @@ export const parseRssFeed = (
         plainText(element(block, "description")),
         700,
       );
+      const originalBody = source.translationAllowed
+        ? bodyText(element(block, "content:encoded"))
+        : "";
       const author = truncate(plainText(element(block, "dc:creator")), 200);
       const published = new Date(plainText(element(block, "pubDate")));
 
@@ -130,7 +185,9 @@ export const parseRssFeed = (
       }
 
       const contentHash = createHash("sha256")
-        .update(`${originalTitle}\n${originalExcerpt}\n${published.toISOString()}`)
+        .update(
+          `${EXTRACTION_VERSION}\n${originalTitle}\n${originalExcerpt}\n${originalBody}\n${published.toISOString()}`,
+        )
         .digest("hex");
 
       items.push({
@@ -138,6 +195,7 @@ export const parseRssFeed = (
         sourceUrl,
         originalTitle,
         originalExcerpt,
+        originalBody,
         sourceAuthor: author || null,
         sourcePublishedAt: published,
         contentHash,
