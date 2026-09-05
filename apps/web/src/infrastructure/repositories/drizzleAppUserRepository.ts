@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import type {
   AppUser,
@@ -14,7 +14,9 @@ const KAKAO_PROVIDER = "kakao";
 // users.email is NOT NULL UNIQUE (Auth.js schema). Kakao may not provide an
 // email, so absent ones get a synthetic, deterministic placeholder.
 const emailFor = (info: KakaoUserInfo): string =>
-  info.email ?? `kakao-${info.kakaoId}@users.noreply.owellness.kr`;
+  (
+    info.email ?? `kakao-${info.kakaoId}@users.noreply.owellness.kr`
+  ).toLowerCase();
 
 export const drizzleAppUserRepository: AppUserRepository = {
   async upsertKakaoUser(info: KakaoUserInfo): Promise<AppUser> {
@@ -51,6 +53,15 @@ export const drizzleAppUserRepository: AppUserRepository = {
       .select({ id: users.id, name: users.name })
       .from(users)
       .where(eq(users.id, id))
+      .limit(1);
+    return row ?? null;
+  },
+
+  async findByEmail(email: string): Promise<AppUser | null> {
+    const [row] = await db
+      .select({ id: users.id, name: users.name })
+      .from(users)
+      .where(sql`lower(${users.email}) = ${email.toLowerCase()}`)
       .limit(1);
     return row ?? null;
   },

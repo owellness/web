@@ -16,6 +16,8 @@ declare module "next-auth" {
   }
   interface User {
     role?: AuthRole;
+    /** Stable users.id created while mapping the Kakao profile. */
+    appUserId?: string;
   }
 }
 
@@ -77,6 +79,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         return {
+          // Auth.js deliberately replaces `id` returned by an OAuth profile
+          // with a temporary UUID when no adapter is configured. Preserve the
+          // actual users.id separately so the JWT can reference DB-owned rows.
+          appUserId: user.id,
           id: user.id,
           name: user.name ?? nickname,
           email: email ?? `kakao-${kakaoId}@users.noreply.owellness.kr`,
@@ -95,10 +101,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.appUserId ?? user.id;
+        if (user.appUserId) token.appUserId = user.appUserId;
         token.role =
           (user as { role?: AuthRole }).role ??
           (account?.provider === "credentials" ? "admin" : "viewer");
+      }
+
+      // Repair Kakao JWTs issued before appUserId was preserved. The profile
+      // flow already created the users row, so its unique email safely maps
+      // the legacy temporary UUID back to the stable database UUID.
+      if (
+        !token.appUserId &&
+        token.role === "viewer" &&
+        typeof token.email === "string"
+      ) {
+        const existing = await drizzleAppUserRepository.findByEmail(token.email);
+        if (existing) {
+          token.id = existing.id;
+          token.appUserId = existing.id;
+        }
       }
       return token;
     },

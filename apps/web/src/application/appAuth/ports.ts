@@ -20,6 +20,7 @@ export type AppUser = {
 export interface AppUserRepository {
   upsertKakaoUser(info: KakaoUserInfo): Promise<AppUser>;
   findById(id: string): Promise<AppUser | null>;
+  findByEmail(email: string): Promise<AppUser | null>;
 }
 
 export type IssuedToken = {
