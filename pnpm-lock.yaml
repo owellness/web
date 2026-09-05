@@ -252,6 +252,9 @@ importers:
 
   packages/shared:
     dependencies:
+      lunar-javascript:
+        specifier: 1.7.7
+        version: 1.7.7
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -4433,6 +4436,9 @@ packages:
     resolution: {integrity: sha512-dYwyPzb4MEKpGUmNYk3WKWPnMrHs3FKM+q94kAnJrcDIqqn1hq2xY8scaS2ovsOCM5D51ey2gaRG3PBb1vgoYQ==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  lunar-javascript@1.7.7:
+    resolution: {integrity: sha512-u/KYiwPIBo/0bT+WWfU7qO1d+aqeB90Tuy4ErXenr2Gam0QcWeezUvtiOIyXR7HbVnW2I1DKfU0NBvzMZhbVQw==}
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
@@ -10269,6 +10275,8 @@ snapshots:
   lucide-react@1.16.0(react@19.2.4):
     dependencies:
       react: 19.2.4
+
+  lunar-javascript@1.7.7: {}
 
   lz-string@1.5.0: {}
 

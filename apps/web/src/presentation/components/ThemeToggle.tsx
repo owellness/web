@@ -2,6 +2,7 @@
 
 import { Laptop, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useSyncExternalStore } from "react";
 
 const ORDER = ["light", "dark", "system"] as const;
 type Choice = (typeof ORDER)[number];
@@ -12,12 +13,20 @@ const LABEL: Record<Choice, string> = {
   system: "시스템",
 };
 
+const noopSubscribe = () => () => {};
+
 export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const hydrated = useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
 
-  // `resolvedTheme` is undefined on the server / first client render. We render
-  // a placeholder matching the server output until next-themes hydrates.
-  if (!resolvedTheme) {
+  // next-themes can resolve the browser theme before React hydrates, while the
+  // server necessarily renders without it. Keep the first client tree identical
+  // to the server and reveal the active icon on the following render.
+  if (!hydrated || !resolvedTheme) {
     return (
       <button
         type="button"

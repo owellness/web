@@ -37,6 +37,11 @@ export async function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link href="/saju" className="hover:text-foreground">
+                O! 리듬 · 명리 웰니스
+              </Link>
+            </li>
+            <li>
               <Link href="/about" className="hover:text-foreground">
                 소개
               </Link>

@@ -45,6 +45,12 @@ export async function SiteHeader() {
             유형검사
           </Link>
           <Link
+            href="/saju"
+            className="hidden whitespace-nowrap rounded-md px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground lg:inline-flex"
+          >
+            O! 리듬
+          </Link>
+          <Link
             href="/search"
             className="hidden whitespace-nowrap rounded-md px-3 py-2 text-muted-foreground transition hover:bg-muted hover:text-foreground md:inline-flex"
           >

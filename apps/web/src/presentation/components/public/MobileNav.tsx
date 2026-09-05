@@ -93,6 +93,14 @@ export function MobileNav({ cats }: { cats: NavCategory[] }) {
               유형검사
             </Link>
             <Link
+              href="/saju"
+              onClick={close}
+              className="flex items-center gap-2 rounded-md px-3 py-2.5 text-foreground transition hover:bg-muted"
+            >
+              <Sparkles className="size-4 text-muted-foreground" aria-hidden />
+              O! 리듬 · 명리 웰니스
+            </Link>
+            <Link
               href="/search"
               onClick={close}
               className="flex items-center gap-2 rounded-md px-3 py-2.5 text-foreground transition hover:bg-muted"

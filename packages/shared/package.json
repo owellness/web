@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./owti": "./src/owti/index.ts",
+    "./saju": "./src/saju/index.ts",
     "./api/v1": "./src/api/v1/index.ts"
   },
   "scripts": {
@@ -15,6 +16,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "lunar-javascript": "1.7.7",
     "zod": "^4.4.3"
   }
 }
