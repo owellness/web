@@ -4,7 +4,6 @@ import { createAuthorService } from "@/application/authors/service";
 import { createCategoryService } from "@/application/categories/service";
 import { createFaqService } from "@/application/faq/service";
 import { createExternalContentService } from "@/application/externalContent/service";
-import { createExternalSummaryService } from "@/application/externalContent/summaryService";
 import { createMediaService } from "@/application/media/service";
 import { createNewsletterService } from "@/application/newsletter/service";
 import { createOwtiAnalyticsService } from "@/application/owtiAnalytics/service";
@@ -23,7 +22,6 @@ import { nextRevalidation } from "@/infrastructure/cache/nextRevalidation";
 import { tiptapCampaignRenderer } from "@/infrastructure/content/campaignHtmlRenderer";
 import { slugify } from "@/infrastructure/content/slug";
 import { tiptapHtmlRenderer } from "@/infrastructure/content/tiptapHtmlRenderer";
-import { geminiSummarizer } from "@/infrastructure/contentIngestion/geminiSummarizer";
 import { papagoTranslator } from "@/infrastructure/contentIngestion/papagoTranslator";
 import { rssFeedReader } from "@/infrastructure/contentIngestion/rssFeedReader";
 import { externalFeedSources } from "@/infrastructure/contentIngestion/sources";
@@ -67,13 +65,6 @@ export const externalContentService = createExternalContentService({
   translator: papagoTranslator,
   repository: drizzleExternalContentRepository,
   revalidation: nextRevalidation,
-});
-
-export const externalSummaryService = createExternalSummaryService({
-  sources: externalFeedSources,
-  translationProvider: papagoTranslator.provider,
-  summarizer: geminiSummarizer,
-  repository: drizzleExternalContentRepository,
 });
 
 export const owtiAnalyticsService = createOwtiAnalyticsService(
