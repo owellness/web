@@ -3,6 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import type {
   AppUser,
   AppUserRepository,
+  EmailUserInfo,
   KakaoUserInfo,
 } from "@/application/appAuth/ports";
 
@@ -46,6 +47,34 @@ export const drizzleAppUserRepository: AppUserRepository = {
     });
 
     return user;
+  },
+
+  async createEmailUser(info: EmailUserInfo): Promise<AppUser | null> {
+    try {
+      const [user] = await db
+        .insert(users)
+        .values({
+          name: info.name,
+          email: info.email,
+          passwordHash: info.passwordHash,
+          gender: info.gender,
+          birthDate: info.birthDate,
+          phone: info.phone,
+        })
+        .returning({ id: users.id, name: users.name });
+      return user;
+    } catch (error) {
+      // PostgreSQL unique_violation. 이메일/전화번호 중복은 가입 충돌로 통일한다.
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "23505"
+      ) {
+        return null;
+      }
+      throw error;
+    }
   },
 
   async findById(id: string): Promise<AppUser | null> {

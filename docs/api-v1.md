@@ -6,7 +6,7 @@
 공통 사항
 
 - Base path: `/api/v1`
-- 오류: 모든 실패는 `{ "error": { "code", "message" } }` 봉투 (`apiErrorSchema`). code ∈ `VALIDATION_FAILED(400)` · `UNAUTHORIZED(401)` · `FORBIDDEN(403)` · `NOT_FOUND(404)` · `RATE_LIMITED(429)` · `INTERNAL(500)`
+- 오류: 모든 실패는 `{ "error": { "code", "message" } }` 봉투 (`apiErrorSchema`). code ∈ `VALIDATION_FAILED(400)` · `UNAUTHORIZED(401)` · `FORBIDDEN(403)` · `NOT_FOUND(404)` · `ALREADY_EXISTS(409)` · `RATE_LIMITED(429)` · `INTERNAL(500)`
 - 인증: `Authorization: Bearer <JWT>` — HS256, 만료 14일 (v1은 리프레시 토큰 없음, v1.1 도입 예정)
 - 서버 환경변수: `APP_JWT_SECRET`
 
@@ -17,6 +17,15 @@
 - 요청: `{ "kakaoAccessToken": string }`
 - 응답 200: `{ "tokenType": "Bearer", "accessToken": string, "expiresIn": number, "user": { "id": uuid, "nickname": string|null } }`
 - 사용자 저장: 기존 Auth.js `users` + `accounts`(provider `"kakao"`) 테이블 재사용. 카카오가 이메일을 주지 않으면 합성 이메일(`kakao-{id}@users.noreply.owellness.kr`)로 저장
+
+## POST /api/v1/auth/email/signup — 이메일 회원가입
+
+- 요청: `{ "name", "email", "password", "gender", "birthDate", "phone" }`
+- `gender`: `male` · `female` · `other` · `prefer_not_to_say`
+- `birthDate`: 실제 과거/오늘 날짜인 `YYYY-MM-DD`, `phone`: 국내 휴대전화 번호
+- 비밀번호: 영문과 숫자를 포함한 8~72자. 서버는 무작위 salt 기반 scrypt 해시만 저장
+- 응답 201: 카카오 로그인과 같은 Bearer 토큰/사용자 봉투
+- 이메일 또는 전화번호 중복 시 409 `ALREADY_EXISTS`
 
 ## POST /api/v1/owti/results — 검사 결과 제출 (Bearer)
 

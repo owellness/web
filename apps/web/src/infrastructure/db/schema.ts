@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  date,
   index,
   integer,
   jsonb,
@@ -14,6 +15,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
+import type { Gender } from "@owellness/shared/api/v1";
 
 const idDefault = () => sql`gen_random_uuid()`;
 const now = () => sql`now()`;
@@ -31,8 +33,12 @@ export const users = pgTable("users", {
   emailVerified: timestamp("email_verified", { withTimezone: true, mode: "date" }),
   image: text("image"),
   role: userRole("role").notNull().default("viewer"),
+  gender: varchar("gender", { length: 24 }).$type<Gender>(),
+  birthDate: date("birth_date", { mode: "string" }),
+  phone: varchar("phone", { length: 20 }),
+  passwordHash: text("password_hash"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
-});
+}, (t) => [uniqueIndex("users_phone_uidx").on(t.phone)]);
 
 // NOTE: JS property names must stay snake_case here to satisfy the type
 // constraint enforced by @auth/drizzle-adapter (DefaultPostgresAccountsTable).
@@ -221,6 +227,14 @@ export const externalContentItems = pgTable(
     translatedTitle: text("translated_title"),
     translatedExcerpt: text("translated_excerpt"),
     translatedBody: text("translated_body"),
+    summaryLines: jsonb("summary_lines").$type<
+      [string, string, string]
+    >(),
+    summaryProvider: varchar("summary_provider", { length: 40 }),
+    summaryModel: varchar("summary_model", { length: 80 }),
+    summaryPromptVersion: varchar("summary_prompt_version", { length: 40 }),
+    summaryError: varchar("summary_error", { length: 120 }),
+    summarizedAt: timestamp("summarized_at", { withTimezone: true }),
     contentHash: varchar("content_hash", { length: 64 }).notNull(),
     status: externalContentStatus("status")
       .notNull()

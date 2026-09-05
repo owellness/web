@@ -48,6 +48,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
+      url: `${SITE_URL}/privacy`,
+      lastModified: new Date("2026-09-05T00:00:00+09:00"),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
       url: `${SITE_URL}/owti`,
       lastModified: now,
       changeFrequency: "monthly",

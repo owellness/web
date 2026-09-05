@@ -5,6 +5,7 @@ export const apiErrorSchema = z.object({
   error: z.object({
     code: z.enum([
       "VALIDATION_FAILED",
+      "ALREADY_EXISTS",
       "UNAUTHORIZED",
       "FORBIDDEN",
       "NOT_FOUND",

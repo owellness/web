@@ -51,6 +51,11 @@ export async function SiteFooter() {
                 자주 묻는 질문
               </Link>
             </li>
+            <li>
+              <Link href="/privacy" className="hover:text-foreground">
+                개인정보 처리방침
+              </Link>
+            </li>
           </ul>
         </div>
       </div>

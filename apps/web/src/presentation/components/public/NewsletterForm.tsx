@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 
 import type {
@@ -49,7 +50,10 @@ export function NewsletterForm({
         />
         <span>
           개인정보(이메일) 수집·이용에 동의합니다. 수집 목적은 뉴스레터 발송이며,
-          언제든지 이메일 하단의 링크로 해지할 수 있습니다.
+          언제든지 이메일 하단의 링크로 해지할 수 있습니다.{" "}
+          <Link href="/privacy" className="underline underline-offset-2">
+            개인정보 처리방침
+          </Link>
         </span>
       </label>
 

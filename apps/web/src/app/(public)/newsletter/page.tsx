@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { SITE_NAME, SITE_URL } from "@/config/site";
 import { subscribeAction } from "@/presentation/actions/newsletter";
@@ -67,7 +68,11 @@ export default async function NewsletterPage({
       </div>
 
       <p className="mt-6 text-center text-xs text-muted-foreground">
-        구독 동의 시 개인정보 처리방침에 따라 이메일 주소가 안전하게 관리됩니다.
+        구독 동의 시{" "}
+        <Link href="/privacy" className="underline underline-offset-2">
+          개인정보 처리방침
+        </Link>
+        에 따라 이메일 주소가 안전하게 관리됩니다.
       </p>
     </section>
   );

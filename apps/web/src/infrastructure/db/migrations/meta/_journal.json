@@ -92,6 +92,20 @@
       "when": 1788538458640,
       "tag": "0012_loud_thunderbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788590597613,
+      "tag": "0013_white_king_cobra",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788593772752,
+      "tag": "0014_familiar_colonel_america",
+      "breakpoints": true
     }
   ]
 }

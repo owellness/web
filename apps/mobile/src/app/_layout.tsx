@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { initKakao } from "@/features/auth/kakao";
 import { colors } from "@/design-system/tokens";
+import { AuthProvider } from "@/features/auth/AuthContext";
 
 export default function RootLayout() {
   useEffect(() => {
@@ -11,7 +12,7 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <>
+    <AuthProvider>
       <StatusBar style="dark" />
       <Stack
         screenOptions={{
@@ -20,7 +21,8 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="signup" />
       </Stack>
-    </>
+    </AuthProvider>
   );
 }

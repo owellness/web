@@ -1,3 +1,5 @@
+import type { Gender } from "@owellness/shared/api/v1";
+
 /** 카카오 OpenAPI에서 확인한 사용자 정보. */
 export type KakaoUserInfo = {
   /** 카카오 회원번호 (id) — accounts.providerAccountId로 저장 */
@@ -16,11 +18,26 @@ export type AppUser = {
   name: string | null;
 };
 
+export type EmailUserInfo = {
+  name: string;
+  email: string;
+  passwordHash: string;
+  gender: Gender;
+  birthDate: string;
+  phone: string;
+};
+
 /** provider="kakao" 계정 기준으로 사용자를 찾거나 생성한다. */
 export interface AppUserRepository {
   upsertKakaoUser(info: KakaoUserInfo): Promise<AppUser>;
+  /** 이메일 또는 전화번호가 이미 존재하면 null. */
+  createEmailUser(info: EmailUserInfo): Promise<AppUser | null>;
   findById(id: string): Promise<AppUser | null>;
   findByEmail(email: string): Promise<AppUser | null>;
+}
+
+export interface PasswordHasher {
+  hash(password: string): Promise<string>;
 }
 
 export type IssuedToken = {

@@ -1,9 +1,11 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { OwButton } from "@/design-system";
 import { colors, spacing } from "@/design-system/tokens";
+import { useAuth } from "@/features/auth/AuthContext";
 import {
   isKakaoConfigured,
   loginWithKakao,
@@ -16,6 +18,7 @@ import {
  * 실제 온보딩 게이트(1a·1c)는 M1에서 이 로그인 플로우를 재사용한다.
  */
 export default function MyScreen() {
+  const { emailSession, logoutEmail } = useAuth();
   const [profile, setProfile] = useState<KakaoProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -35,8 +38,12 @@ export default function MyScreen() {
   const handleLogout = async () => {
     setBusy(true);
     try {
-      await logoutFromKakao();
-      setProfile(null);
+      if (emailSession) {
+        logoutEmail();
+      } else {
+        await logoutFromKakao();
+        setProfile(null);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -49,10 +56,10 @@ export default function MyScreen() {
       <View style={styles.body}>
         <Text style={styles.title}>마이</Text>
 
-        {profile ? (
+        {emailSession || profile ? (
           <>
             <Text style={styles.profile}>
-              {profile.nickname}님 (id: {profile.id})
+              {emailSession?.user.nickname ?? profile?.nickname ?? "회원"}님
             </Text>
             <OwButton
               label="로그아웃"
@@ -63,14 +70,23 @@ export default function MyScreen() {
             />
           </>
         ) : (
-          <OwButton
-            label={busy ? "로그인 중…" : "카카오로 로그인"}
-            variant="kakao"
-            onPress={handleLogin}
-            disabled={busy || !isKakaoConfigured}
-            loading={busy}
-            style={styles.button}
-          />
+          <>
+            <OwButton
+              label="이메일로 회원가입"
+              onPress={() => router.push("/signup")}
+              disabled={busy}
+              style={styles.button}
+            />
+            <Text style={styles.or}>또는</Text>
+            <OwButton
+              label={busy ? "로그인 중…" : "카카오로 로그인"}
+              variant="kakao"
+              onPress={handleLogin}
+              disabled={busy || !isKakaoConfigured}
+              loading={busy}
+              style={styles.button}
+            />
+          </>
         )}
 
         {!isKakaoConfigured && (
@@ -96,6 +112,7 @@ const styles = StyleSheet.create({
   },
   title: { color: colors.ink, fontSize: 20, fontWeight: "700" },
   profile: { color: colors.textSecondary, fontSize: 15 },
+  or: { color: colors.textMuted, fontSize: 12.5 },
   button: { minWidth: 240 },
   hint: {
     color: colors.textMuted,

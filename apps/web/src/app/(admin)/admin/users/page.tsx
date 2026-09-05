@@ -11,6 +11,7 @@ const formatDateTime = (date: Date) =>
 
 const providerLabel = (provider: string) => {
   if (provider === "kakao") return "카카오";
+  if (provider === "email") return "이메일";
   return provider;
 };
 

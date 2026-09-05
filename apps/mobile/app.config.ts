@@ -4,6 +4,9 @@ import type { ConfigContext, ExpoConfig } from "expo/config";
 // 로컬: apps/mobile/.env 또는 셸 환경변수. EAS 빌드: eas env(또는 secret)로 주입.
 const kakaoNativeAppKey =
   process.env.KAKAO_NATIVE_APP_KEY ?? "REPLACE_WITH_KAKAO_NATIVE_APP_KEY";
+const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
+const privacyPolicyUrl =
+  process.env.EXPO_PUBLIC_PRIVACY_URL ?? `${apiUrl.replace(/\/+$/, "")}/privacy`;
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -12,6 +15,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   extra: {
     ...config.extra,
     kakaoNativeAppKey,
+    apiUrl,
+    privacyPolicyUrl,
   },
   plugins: [
     ...(config.plugins ?? []),

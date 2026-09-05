@@ -18,6 +18,7 @@ import { SITE_NAME, SITE_URL } from "@/config/site";
 import { appJwtIssuer } from "@/infrastructure/auth/appJwt";
 import { hmacConfirmTokenSigner } from "@/infrastructure/auth/hmacTokens";
 import { kakaoOpenApiVerifier } from "@/infrastructure/auth/kakaoOpenApi";
+import { scryptPasswordHasher } from "@/infrastructure/auth/scryptPasswordHasher";
 import { nextRevalidation } from "@/infrastructure/cache/nextRevalidation";
 import { tiptapCampaignRenderer } from "@/infrastructure/content/campaignHtmlRenderer";
 import { slugify } from "@/infrastructure/content/slug";
@@ -113,6 +114,7 @@ export const appAuthService = createAppAuthService({
   verifier: kakaoOpenApiVerifier,
   users: drizzleAppUserRepository,
   tokens: appJwtIssuer,
+  passwords: scryptPasswordHasher,
 });
 
 export const owtiResultService = createOwtiResultService(

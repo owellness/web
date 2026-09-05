@@ -1,4 +1,4 @@
-import { countDistinct, desc, sql } from "drizzle-orm";
+import { countDistinct, desc, isNotNull, or, sql } from "drizzle-orm";
 
 import type { RegisteredUser } from "@/application/users/model";
 import type { RegisteredUserRepository } from "@/application/users/ports";
@@ -12,11 +12,15 @@ export const drizzleRegisteredUserRepository: RegisteredUserRepository = {
         id: users.id,
         name: users.name,
         email: users.email,
-        providers: sql<string[]>`array_agg(distinct ${accounts.provider})`,
+        providers: sql<string[]>`case
+          when ${users.passwordHash} is not null then array['email']::text[]
+          else array_agg(distinct ${accounts.provider})
+        end`,
         createdAt: users.createdAt,
       })
       .from(users)
-      .innerJoin(accounts, sql`${accounts.userId} = ${users.id}`)
+      .leftJoin(accounts, sql`${accounts.userId} = ${users.id}`)
+      .where(or(isNotNull(users.passwordHash), isNotNull(accounts.userId)))
       .groupBy(users.id)
       .orderBy(desc(users.createdAt))
       .limit(limit);
@@ -28,7 +32,8 @@ export const drizzleRegisteredUserRepository: RegisteredUserRepository = {
     const [row] = await db
       .select({ value: countDistinct(users.id) })
       .from(users)
-      .innerJoin(accounts, sql`${accounts.userId} = ${users.id}`);
+      .leftJoin(accounts, sql`${accounts.userId} = ${users.id}`)
+      .where(or(isNotNull(users.passwordHash), isNotNull(accounts.userId)));
 
     return Number(row?.value ?? 0);
   },

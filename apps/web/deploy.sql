@@ -171,6 +171,10 @@ CREATE TABLE "users" (
 	"email_verified" timestamp with time zone,
 	"image" text,
 	"role" "user_role" DEFAULT 'viewer' NOT NULL,
+	"gender" varchar(24),
+	"birth_date" date,
+	"phone" varchar(20),
+	"password_hash" text,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
@@ -206,6 +210,7 @@ CREATE INDEX "faq_items_article_idx" ON "faq_items" USING btree ("article_id","p
 CREATE INDEX "faq_items_category_idx" ON "faq_items" USING btree ("category_id","position");
 CREATE UNIQUE INDEX "howto_steps_howto_position_uidx" ON "howto_steps" USING btree ("howto_id","position");
 CREATE INDEX "newsletter_subscribers_status_idx" ON "newsletter_subscribers" USING btree ("status");
+CREATE UNIQUE INDEX "users_phone_uidx" ON "users" USING btree ("phone");
 
 -- ─────────────────────────────────────────────
 -- Newsletter campaigns (broadcast history) — migration 0001
