@@ -294,15 +294,6 @@ export function OwtiQuiz({
       ) : null}
 
       {/* Nav */}
-      {isLast && !isAuthenticated ? (
-        <div className="mt-8 rounded-2xl border border-[#FEE500]/70 bg-[#FEE500]/10 p-4 text-sm leading-relaxed text-foreground">
-          <p className="font-medium">결과 확인에는 카카오 로그인이 필요해요.</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            답변은 이 브라우저에서만 계산되며 서버에 저장되지 않습니다.
-          </p>
-        </div>
-      ) : null}
-
       <div className="mt-8 flex items-center justify-between gap-3">
         <button
           type="button"
