@@ -5,11 +5,11 @@ import { notFound } from "next/navigation";
 import type { ArticleSummary } from "@/application/articles/model";
 import {
   ALL_CODES,
-  DOMAIN_CATEGORY_SLUGS,
   parseCode,
   TYPE_BY_CODE,
   weakDomainsFromCode,
 } from "@/application/owti";
+import { recommendArticlesForOwti } from "@/application/owti/articleRecommendations";
 import { buildBreadcrumbJsonLd } from "@/application/seo/jsonld";
 import { SITE_NAME, SITE_URL } from "@/config/site";
 import { ArticleCard } from "@/presentation/components/public/ArticleCard";
@@ -20,7 +20,7 @@ import { OwtiScoreBreakdown } from "@/presentation/components/public/owti/OwtiSc
 import { OwtiResultArrival } from "@/presentation/components/public/owti/OwtiResultArrival";
 import { OwtiShareCard } from "@/presentation/components/public/owti/OwtiShareCard";
 
-import { articleService, categoryService } from "@/composition";
+import { articleService } from "@/composition";
 
 // Pre-render all 16 type pages at build; reject anything else with a 404.
 export const dynamicParams = false;
@@ -83,53 +83,19 @@ export default async function OwtiResultPage({
 
   const composition = parseCode(code);
 
-  // Recommend real articles to read next. Normally these target the type's weak
-  // (○) domains; a 웰니스 마스터 (no weak domains) instead gets maintenance picks
-  // drawn from every wellness area. We surface the articles directly rather than
-  // sending visitors to a category index.
-  const cats = await categoryService.listAll().catch(() => []);
-  const catBySlug = new Map(cats.map((c) => [c.slug, c]));
   const weakDomains = weakDomainsFromCode(code);
   const isMaster = weakDomains.length === 0;
-  const recSlugs = isMaster
-    ? [...new Set(Object.values(DOMAIN_CATEGORY_SLUGS).flat())]
-    : [...new Set(weakDomains.flatMap((d) => DOMAIN_CATEGORY_SLUGS[d.key]))];
-  const recCats = recSlugs
-    .map((slug) => catBySlug.get(slug))
-    .filter((c): c is NonNullable<typeof c> => Boolean(c));
-
-  // Pull a few published articles from each recommended category, then
-  // round-robin interleave so no single category dominates. Resilient to the DB
-  // being unavailable during static generation (each fetch degrades to []).
-  const RECS_PER_CATEGORY = 4;
   const MAX_RECS = 6;
-  const perCategory = await Promise.all(
-    recCats.map((cat) =>
-      articleService
-        .list(
-          { categorySlug: cat.slug, status: "published" },
-          { limit: RECS_PER_CATEGORY },
-        )
-        .then((r) => r.items)
-        .catch(() => [] as ArticleSummary[]),
-    ),
-  );
-  const recArticles: ArticleSummary[] = [];
-  const seenArticleIds = new Set<string>();
-  for (let i = 0; recArticles.length < MAX_RECS; i++) {
-    let advanced = false;
-    for (const list of perCategory) {
-      const item = list[i];
-      if (!item) continue;
-      advanced = true;
-      if (!seenArticleIds.has(item.id)) {
-        seenArticleIds.add(item.id);
-        recArticles.push(item);
-        if (recArticles.length >= MAX_RECS) break;
-      }
-    }
-    if (!advanced) break;
-  }
+  const candidates = await articleService
+    .list(
+      { status: "published" },
+      // A broad, newest-first pool lets metadata ranking find cross-category
+      // matches while keeping regeneration work bounded.
+      { limit: 50 },
+    )
+    .then((result) => result.items)
+    .catch(() => [] as ArticleSummary[]);
+  const recArticles = recommendArticlesForOwti(code, candidates, MAX_RECS);
 
   return (
     <>
