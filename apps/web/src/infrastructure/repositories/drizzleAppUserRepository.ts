@@ -12,6 +12,19 @@ import { accounts, users } from "@/infrastructure/db/schema";
 
 const KAKAO_PROVIDER = "kakao";
 
+const isUniqueViolation = (error: unknown): boolean => {
+  const visited = new Set<object>();
+  let current = error;
+
+  while (typeof current === "object" && current !== null && !visited.has(current)) {
+    visited.add(current);
+    if ("code" in current && current.code === "23505") return true;
+    current = "cause" in current ? current.cause : null;
+  }
+
+  return false;
+};
+
 // users.email is NOT NULL UNIQUE (Auth.js schema). Kakao may not provide an
 // email, so absent ones get a synthetic, deterministic placeholder.
 const emailFor = (info: KakaoUserInfo): string =>
@@ -65,14 +78,7 @@ export const drizzleAppUserRepository: AppUserRepository = {
       return user;
     } catch (error) {
       // PostgreSQL unique_violation. 이메일/전화번호 중복은 가입 충돌로 통일한다.
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "code" in error &&
-        error.code === "23505"
-      ) {
-        return null;
-      }
+      if (isUniqueViolation(error)) return null;
       throw error;
     }
   },
