@@ -44,6 +44,11 @@ export default async function AdminDashboardPage() {
             desc: "구독 현황과 발송 이력 확인.",
           },
           {
+            href: "/admin/users",
+            title: "가입자",
+            desc: "서비스 가입자와 가입 방식, 가입일 확인.",
+          },
+          {
             href: "/admin/owti",
             title: "웰니스 검사 통계",
             desc: "OWTI 검사 첫 접속·단계별 이탈·완료·유형 분포.",

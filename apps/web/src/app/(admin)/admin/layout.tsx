@@ -18,7 +18,7 @@ export default function AdminLayout({
           >
             {SITE_NAME} · 어드민
           </Link>
-          <nav className="flex items-center gap-1 text-sm text-muted-foreground">
+          <nav className="flex flex-wrap items-center justify-end gap-1 text-sm text-muted-foreground">
             <Link
               href="/admin/articles"
               className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
@@ -48,6 +48,12 @@ export default function AdminLayout({
               className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
             >
               구독자
+            </Link>
+            <Link
+              href="/admin/users"
+              className="rounded-md px-3 py-1.5 hover:bg-muted hover:text-foreground"
+            >
+              가입자
             </Link>
             <Link
               href="/admin/newsletter"

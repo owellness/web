@@ -4,6 +4,7 @@ import { createAuthorService } from "@/application/authors/service";
 import { createCategoryService } from "@/application/categories/service";
 import { createFaqService } from "@/application/faq/service";
 import { createExternalContentService } from "@/application/externalContent/service";
+import { createExternalSummaryService } from "@/application/externalContent/summaryService";
 import { createMediaService } from "@/application/media/service";
 import { createNewsletterService } from "@/application/newsletter/service";
 import { createOwtiAnalyticsService } from "@/application/owtiAnalytics/service";
@@ -12,6 +13,7 @@ import { createPageService } from "@/application/pages/service";
 import { createSearchService } from "@/application/search/service";
 import { createSettingsService } from "@/application/settings/service";
 import { createTagService } from "@/application/tags/service";
+import { createRegisteredUserService } from "@/application/users/service";
 import { SITE_NAME, SITE_URL } from "@/config/site";
 
 import { appJwtIssuer } from "@/infrastructure/auth/appJwt";
@@ -21,6 +23,7 @@ import { nextRevalidation } from "@/infrastructure/cache/nextRevalidation";
 import { tiptapCampaignRenderer } from "@/infrastructure/content/campaignHtmlRenderer";
 import { slugify } from "@/infrastructure/content/slug";
 import { tiptapHtmlRenderer } from "@/infrastructure/content/tiptapHtmlRenderer";
+import { geminiSummarizer } from "@/infrastructure/contentIngestion/geminiSummarizer";
 import { papagoTranslator } from "@/infrastructure/contentIngestion/papagoTranslator";
 import { rssFeedReader } from "@/infrastructure/contentIngestion/rssFeedReader";
 import { externalFeedSources } from "@/infrastructure/contentIngestion/sources";
@@ -41,6 +44,7 @@ import { drizzlePageRepository } from "@/infrastructure/repositories/drizzlePage
 import { drizzleSettingsRepository } from "@/infrastructure/repositories/drizzleSettingsRepository";
 import { drizzleSubscriberRepository } from "@/infrastructure/repositories/drizzleSubscriberRepository";
 import { drizzleTagRepository } from "@/infrastructure/repositories/drizzleTagRepository";
+import { drizzleRegisteredUserRepository } from "@/infrastructure/repositories/drizzleRegisteredUserRepository";
 import { postgresFtsAdapter } from "@/infrastructure/search/postgresFtsAdapter";
 import { blobMediaUploadAdapter } from "@/infrastructure/storage/blobClient";
 
@@ -65,6 +69,13 @@ export const externalContentService = createExternalContentService({
   revalidation: nextRevalidation,
 });
 
+export const externalSummaryService = createExternalSummaryService({
+  sources: externalFeedSources,
+  translationProvider: papagoTranslator.provider,
+  summarizer: geminiSummarizer,
+  repository: drizzleExternalContentRepository,
+});
+
 export const owtiAnalyticsService = createOwtiAnalyticsService(
   drizzleOwtiEventRepository,
 );
@@ -86,6 +97,10 @@ export const searchService = createSearchService(postgresFtsAdapter);
 export const settingsService = createSettingsService(drizzleSettingsRepository);
 
 export const mediaService = createMediaService(blobMediaUploadAdapter);
+
+export const registeredUserService = createRegisteredUserService(
+  drizzleRegisteredUserRepository,
+);
 
 export const newsletterService = createNewsletterService({
   repository: drizzleSubscriberRepository,
